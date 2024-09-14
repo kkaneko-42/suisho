@@ -5,6 +5,12 @@ using namespace suisho;
 
 const Vec3 Vec3::kZero(0.0f, 0.0f, 0.0f);
 const Vec3 Vec3::kOne(1.0f, 1.0f, 1.0f);
+const Vec3 Vec3::kRight(1.0f, 0.0f, 0.0f);
+const Vec3 Vec3::kLeft(-1.0f, 0.0f, 0.0f);
+const Vec3 Vec3::kUp(0.0f, 1.0f, 0.0f);
+const Vec3 Vec3::kDown(0.0f, -1.0f, 0.0f);
+const Vec3 Vec3::kBack(0.0f, 0.0f, 1.0f);
+const Vec3 Vec3::kForward(0.0f, 0.0f, -1.0f);
 
 Vec3::Vec3() : x(0), y(0), z(0) {}
 Vec3::Vec3(float xval, float yval, float zval)

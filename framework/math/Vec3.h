@@ -14,6 +14,24 @@ public:
     /// @brief (1, 1, 1, 1)
     static const Vec3 kOne;
 
+    /// @brief Right-pointing unit vector. In this engine, equals to (1, 0, 0)
+    static const Vec3 kRight;
+
+    /// @brief Left-pointing unit vector. In this engine, equals to (-1, 0, 0)
+    static const Vec3 kLeft;
+
+    /// @brief Up-pointing unit vector. In this engine, equals to (0, 1, 0)
+    static const Vec3 kUp;
+
+    /// @brief Down-pointing unit vector. In this engine, equals to (0, -1, 0)
+    static const Vec3 kDown;
+
+    /// @brief Backward-pointing unit vector. In this engine, equals to (0, 1, 0)
+    static const Vec3 kBack;
+
+    /// @brief Forward-pointing unit vector. In this engine, equals to (0, -1, 0)
+    static const Vec3 kForward;
+
     /// @brief x coord
     float x;
 
