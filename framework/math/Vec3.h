@@ -8,10 +8,10 @@ namespace suisho {
  */
 class Vec3 {
 public:
-    /// @brief (0, 0, 0, 0)
+    /// @brief (0, 0, 0)
     static const Vec3 kZero;
 
-    /// @brief (1, 1, 1, 1)
+    /// @brief (1, 1, 1)
     static const Vec3 kOne;
 
     /// @brief Right-pointing unit vector. In this engine, equals to (1, 0, 0)

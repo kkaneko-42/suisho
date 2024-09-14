@@ -4,7 +4,7 @@
 namespace suisho {
 
 /**
- * @brief 4-dimentional vector
+ * @brief 2-dimentional vector
  */
 class Vec2 {
 public:
