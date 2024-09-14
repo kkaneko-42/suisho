@@ -12,17 +12,7 @@ FetchContent_Declare(
     GIT_TAG v3.13.2
 )
 
-set(BUILD_SHARED_LIBS ON)
-set(GLFW_BUILD_EXAMPLES OFF)
-set(GLFW_BUILD_TESTS OFF)
-set(GLFW_BUILD_DOCS OFF)
-FetchContent_Declare(
-    glfw
-    GIT_REPOSITORY https://github.com/glfw/glfw
-    GIT_TAG 3.4
-)
-
-FetchContent_MakeAvailable(entt glfw)
+FetchContent_MakeAvailable(entt)
 
 # Gather engine sources
 include(core/CMakeLists.txt)
@@ -40,4 +30,4 @@ target_include_directories(suisho_framework PUBLIC ./)
 target_include_directories(suisho_framework PUBLIC ${entt_SOURCE_DIR}/src)
 target_include_directories(suisho_framework PUBLIC ${glfw_SOURCE_DIR}/include)
 
-target_link_libraries(suisho_framework INTERFACE EnTT glfw)
+target_link_libraries(suisho_framework INTERFACE EnTT glfw Vulkan::Vulkan)
