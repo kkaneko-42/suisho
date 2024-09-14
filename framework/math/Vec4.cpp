@@ -2,6 +2,9 @@
 
 using namespace suisho;
 
+const Vec4 Vec4::kZero(0.0f, 0.0f, 0.0f, 0.0f);
+const Vec4 Vec4::kOne(1.0f, 1.0f, 1.0f, 1.0f);
+
 Vec4::Vec4() : x(0), y(0), z(0), w(0) {}
 Vec4::Vec4(float xval, float yval, float zval, float wval)
     : x(xval), y(yval), z(zval), w(wval) {}

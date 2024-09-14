@@ -8,6 +8,12 @@ namespace suisho {
  */
 class Vec4 {
 public:
+    /// @brief (0, 0, 0, 0)
+    static const Vec4 kZero;
+
+    /// @brief (1, 1, 1, 1)
+    static const Vec4 kOne;
+
     /// @brief x coord
     float x;
 
