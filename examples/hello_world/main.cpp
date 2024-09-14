@@ -4,8 +4,14 @@
 using namespace suisho;
 
 int main() {
-    Vec4 vec;
+    HelloTriangleApplication app;
 
-    std::cout << "Hello, world!" << std::endl;
+    try {
+        app.run();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+
     return EXIT_SUCCESS;
 }

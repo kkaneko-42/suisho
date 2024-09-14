@@ -1,3 +1,3 @@
 #pragma once
 
-// #include "rendering/vulkan_tutorial.h" // FIXME
+#include "rendering/vulkan_tutorial.h" // FIXME
