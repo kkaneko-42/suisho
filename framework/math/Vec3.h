@@ -98,6 +98,9 @@ public:
 
     /// @return Inner product of this and rhs
     float dot(const Vec3& rhs) const;
+
+    /// @return Cross product of this and rhs
+    Vec3 cross(const Vec3& rhs) const;
 };
 
 /// @return Vector multiplying s to each element of this
