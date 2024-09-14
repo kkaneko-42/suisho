@@ -87,6 +87,18 @@ public:
     /// @brief Divs s to this
     /// @return Reference to this after the division
     inline Vec4& operator/=(float s);
+
+    /// @return Length of this vector
+    float length() const;
+
+    /// @return Squared length of this vector
+    float lengthSqr() const;
+
+    /// @brief Set the length to 1
+    void normalize();
+
+    /// @return Vector applied normalize()
+    Vec4 normalized() const;
 };
 
 /// @return Vector multiplying s to each element of this

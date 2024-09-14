@@ -1,4 +1,5 @@
 #include "Vec4.h"
+#include <cmath>
 
 using namespace suisho;
 
@@ -93,4 +94,31 @@ Vec4& Vec4::operator/=(float s) {
     z /= s;
     w /= s;
     return *this;
+}
+
+float Vec4::length() const {
+    return std::sqrt(lengthSqr());
+}
+
+float Vec4::lengthSqr() const {
+    return x*x + y*y + z*z + w*w;
+}
+
+void Vec4::normalize() {
+    const float lensqr = lengthSqr();
+    if (lensqr == 0.0f) {
+        x = y = z = w = 0.0f;
+    } else {
+        const float len = std::sqrt(lensqr);
+        x /= len;
+        y /= len;
+        z /= len;
+        w /= len;
+    }
+}
+
+Vec4 Vec4::normalized() const {
+    Vec4 v(*this);
+    v.normalize();
+    return v;
 }
