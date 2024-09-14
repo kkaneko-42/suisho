@@ -99,6 +99,9 @@ public:
 
     /// @return Vector applied normalize()
     Vec4 normalized() const;
+
+    /// @return Inner product of this and rhs
+    float dot(const Vec4& rhs) const;
 };
 
 /// @return Vector multiplying s to each element of this

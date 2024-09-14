@@ -122,3 +122,7 @@ Vec4 Vec4::normalized() const {
     v.normalize();
     return v;
 }
+
+float Vec4::dot(const Vec4& rhs) const {
+    return x*rhs.x + y*rhs.y + z*rhs.z + w*rhs.w;
+}
