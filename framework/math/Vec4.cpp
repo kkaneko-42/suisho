@@ -42,3 +42,55 @@ bool Vec4::operator==(const Vec4& rhs) const {
         w == rhs.w
     );
 }
+
+Vec4 Vec4::operator+(const Vec4& rhs) const {
+    Vec4 lhs(*this);
+    return (lhs += rhs);
+}
+
+Vec4& Vec4::operator+=(const Vec4& rhs) {
+    x += rhs.x;
+    y += rhs.y;
+    z += rhs.z;
+    w += rhs.w;
+    return *this;
+}
+
+Vec4 Vec4::operator-(const Vec4& rhs) const {
+    Vec4 lhs(*this);
+    return (lhs -= rhs);
+}
+
+Vec4& Vec4::operator-=(const Vec4& rhs) {
+    x -= rhs.x;
+    y -= rhs.y;
+    z -= rhs.z;
+    w -= rhs.w;
+    return *this;
+}
+
+Vec4 Vec4::operator*(float s) const {
+    Vec4 lhs(*this);
+    return (lhs *= s);
+}
+
+Vec4& Vec4::operator*=(float s) {
+    x *= s;
+    y *= s;
+    z *= s;
+    w *= s;
+    return *this;
+}
+
+Vec4 Vec4::operator/(float s) const {
+    Vec4 lhs(*this);
+    return (lhs /= s);
+}
+
+Vec4& Vec4::operator/=(float s) {
+    x /= s;
+    y /= s;
+    z /= s;
+    w /= s;
+    return *this;
+}

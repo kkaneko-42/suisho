@@ -49,18 +49,48 @@ public:
 
     /// @brief Copy the all elements of src
     /// @param rhs copy src
-    /// @return *this
+    /// @return *this after the copy
     Vec4& operator=(const Vec4& rhs);
 
     /// @brief Move the all elements of src
     /// @param rhs move src
-    /// @return *this
+    /// @return *this after the move
     Vec4& operator=(Vec4&& rhs) noexcept;
 
     /// @param rhs compare target
     /// @return True if this->t == rhs. t for any element t. False otherwise
     bool operator==(const Vec4& rhs) const;
+
+    /// @return Vector adding each element
+    Vec4 operator+(const Vec4& rhs) const;
+
+    /// @brief Adds rhs to this
+    /// @return Reference to this after the addition
+    Vec4& operator+=(const Vec4& rhs);
+
+    /// @return Vector subtracting each element
+    Vec4 operator-(const Vec4& rhs) const;
+
+    /// @brief Subs rhs to this
+    /// @return Reference to this after the substraction
+    Vec4& operator-=(const Vec4& rhs);
+
+    /// @return Vector multiplying s to each element of this
+    Vec4 operator*(float s) const;
+
+    /// @return Vector multiplying s to each element of this
+    Vec4& operator*=(float s);
+
+    /// @return Vector dividing s to each element of this
+    inline Vec4 operator/(float s) const;
+
+    /// @brief Divs s to this
+    /// @return Reference to this after the division
+    inline Vec4& operator/=(float s);
 };
+
+/// @return Vector multiplying s to each element of this
+inline Vec4 operator*(float s, const Vec4& v) { return v * s; }
 
 } // namespace suisho
 
