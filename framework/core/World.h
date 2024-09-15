@@ -28,7 +28,7 @@ public:
     void destroyEntity(Entity e);
 
     /**
-     * @brief Add constructed component and attached to e
+     * @brief Add constructed component and attached to e. If T has already attached to e, replace it.
      * 
      * @tparam T Component type
      * @tparam Args Component construction param types
@@ -38,7 +38,11 @@ public:
      */
     template <class T, class... Args>
     T& addComponent(Entity e, Args&&... args) {
-        return reg_.emplace<T>(e, std::forward<Args>(args)...);
+        if (!reg_.valid(e)) {
+            throw std::invalid_argument();
+        }
+
+        return reg_.emplace_or_replace<T>(e, std::forward<Args>(args)...);
     }
 
     /**
@@ -52,6 +56,10 @@ public:
      */
     template <class T, class... S>
     std::size_t removeComponent(Entity e) {
+        if (!reg_.valid(e)) {
+            throw std::invalid_argument();
+        }
+
         return reg_.remove<T, S...>(e);
     }
 
