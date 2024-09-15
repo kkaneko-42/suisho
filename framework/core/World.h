@@ -63,6 +63,43 @@ public:
         return reg_.remove<T, S...>(e);
     }
 
+    /**
+     * @brief Check if e has the specified components
+     * 
+     * @tparam T Component type
+     * @tparam S Other component types
+     * @param e Valid entity checked
+     * @return True if e has all of the specified components. False otherwise.
+     * @throw std::invalid_argument e dosen't exists
+     */
+    template <class T, class... S>
+    bool hasComponent(Entity e) {
+        if (!reg_.valid(e)) {
+            throw std::invalid_argument();
+        }
+
+        return reg_.all_of<T, S...>(e);
+    }
+
+    /**
+     * @brief Get the reference to component attached to e
+     * 
+     * @tparam T Component type
+     * @param e Valid eneity
+     * @return Reference to the component attached to e. nullptr if e dosen't have T
+     * @throw std::invalid_argument e dosen't exists
+     */
+    template <class T>
+    T* getComponent(Entity e) {
+        if (!reg_.valid(e)) {
+            throw std::invalid_argument();
+        } else if (!hasComponent<T>(e)) {
+            return nullptr;
+        }
+
+        return &reg_.get<T>(e);
+    }
+
 private:
     entt::registry reg_;
 };
