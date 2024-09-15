@@ -21,6 +21,8 @@ TEST(WorldTest, EasyTest) {
     EXPECT_TRUE(world.hasComponent<int>(e));
     ASSERT_NE(nullptr, world.getComponent<int>(e));
     EXPECT_EQ(42, *world.getComponent<int>(e));
+    EXPECT_EQ(0, world.addComponent<int>(e));
+    EXPECT_EQ(0, *world.getComponent<int>(e));
     EXPECT_EQ(1, world.removeComponent<int>(e));
     EXPECT_EQ(nullptr, world.getComponent<int>(e));
     EXPECT_EQ(0, world.removeComponent<int>(e));
