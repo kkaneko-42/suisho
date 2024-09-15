@@ -39,7 +39,7 @@ public:
     template <class T, class... Args>
     T& addComponent(Entity e, Args&&... args) {
         if (!reg_.valid(e)) {
-            throw std::invalid_argument();
+            throw std::invalid_argument(__func__ + std::string(": e is invalid"));
         }
 
         return reg_.emplace_or_replace<T>(e, std::forward<Args>(args)...);
@@ -57,7 +57,7 @@ public:
     template <class T, class... S>
     std::size_t removeComponent(Entity e) {
         if (!reg_.valid(e)) {
-            throw std::invalid_argument();
+            throw std::invalid_argument(__func__ + std::string(": e is invalid"));
         }
 
         return reg_.remove<T, S...>(e);
@@ -75,7 +75,7 @@ public:
     template <class T, class... S>
     bool hasComponent(Entity e) {
         if (!reg_.valid(e)) {
-            throw std::invalid_argument();
+            throw std::invalid_argument(__func__ + std::string(": e is invalid"));
         }
 
         return reg_.all_of<T, S...>(e);
@@ -92,7 +92,7 @@ public:
     template <class T>
     T* getComponent(Entity e) {
         if (!reg_.valid(e)) {
-            throw std::invalid_argument();
+            throw std::invalid_argument(__func__ + std::string(": e is invalid"));
         } else if (!hasComponent<T>(e)) {
             return nullptr;
         }

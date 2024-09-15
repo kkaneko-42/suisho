@@ -7,5 +7,9 @@ Entity World::createEntity() {
 }
 
 void World::destroyEntity(Entity e) {
+    if (!reg_.valid(e)) {
+        throw std::invalid_argument(__func__ + std::string(": e is invalid"));
+    }
+
     reg_.destroy(e);
 }
