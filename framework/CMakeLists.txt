@@ -27,7 +27,6 @@ set(SUISHO_FRAMEWORK_SRCS
 add_library(suisho_framework STATIC ${SUISHO_FRAMEWORK_SRCS})
 
 target_compile_features(suisho_framework PUBLIC cxx_std_17)
-target_compile_options(suisho_framework PRIVATE -fno-rtti)
 target_include_directories(suisho_framework PUBLIC ./)
 target_include_directories(suisho_framework PUBLIC ${entt_SOURCE_DIR}/src)
 target_include_directories(suisho_framework PUBLIC ${glfw_SOURCE_DIR}/include)
