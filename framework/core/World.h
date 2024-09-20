@@ -100,6 +100,18 @@ public:
         return &reg_.get<T>(e);
     }
 
+    /**
+     * @brief Iterate entities
+     * 
+     * @tparam T Component type attached to the iterated entities
+     * @tparam S Other component types
+     * @param f Function object
+     */
+    template <class T, class... S>
+    void forEachComponent(void(*f)(T&, S&...)) {
+        reg_.view<T, S...>().each(f);
+    }
+
 private:
     entt::registry reg_;
 };
