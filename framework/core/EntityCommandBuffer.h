@@ -16,6 +16,7 @@ public:
      * @param components Components attached to the created entities
      * 
      * @see World::createEntity
+     * @todo Avoid T copying
      */
     template <class... T>
     void createEntity(T... components) {
