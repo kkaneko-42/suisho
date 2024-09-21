@@ -12,7 +12,7 @@ static void tester(const int& i, const std::string& s) {
     g_count += 1;
 }
 
-static void gatherEntities(Entity e) {
+static void gatherEntities(Entity e, const int&, const std::string&) {
     g_entities.push_back(e);
 }
 
@@ -25,24 +25,24 @@ TEST(EntityCommandBufferTest, EasyTest) {
 
     World world;
     buf.submit(world);
-    world.forEachComponent(tester);
+    world.iter<int, std::string>(tester);
     EXPECT_EQ(66, g_int_value);
     EXPECT_EQ(2, g_count);
 
-    world.forEachEntity<int, std::string>(gatherEntities);
+    world.iter<int, std::string>(gatherEntities);
     for (const auto& e : g_entities) {
         buf.removeComponent<int>(e);
         buf.destroyEntity(e);
     }
 
     g_int_value = g_count = 0;
-    world.forEachComponent(tester);
+    world.iter<int, std::string>(tester);
     EXPECT_EQ(66, g_int_value);
     EXPECT_EQ(2, g_count);
 
     buf.submit(world);
     g_int_value = g_count = 0;
-    world.forEachComponent(tester);
+    world.iter<int, std::string>(tester);
     EXPECT_EQ(0, g_int_value);
     EXPECT_EQ(0, g_count);
 }

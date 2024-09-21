@@ -101,26 +101,21 @@ public:
     }
 
     /**
-     * @brief Iterate component
+     * @brief Iterate components (and entities optional) 
      * 
      * @tparam T Component type attached to the iterated entities
      * @tparam S Other component types
-     * @param f Function object
+     * @tparam F Callable object type (void(Entity, T&, S&...) or void(T&, S&...))
+     * @param f Callable object. Form: 
      */
-    template <class T, class... S>
-    void forEachComponent(void(*f)(T&, S&...)) {
-        reg_.view<T, S...>().each(f);
-    }
-
-    /**
-     * @brief temporary
-     * @todo documentation
-     */
-    template <class T, class... S>
-    void forEachEntity(void(*f)(Entity)) {
-        for (Entity e : reg_.view<T, S...>()) {
-            f(e);
-        }
+    template <class T, class... S, class F>
+    void iter(F&& f) {
+        static_assert(
+            std::is_invocable_v<F, Entity, T&, S&...> ||
+            std::is_invocable_v<F, T&, S&...>,
+            "F must be callable by arguments (Entity, T&, S&...) or (T&, S&...)"
+        );
+        reg_.view<T, S...>().each(std::forward<F>(f));
     }
 
 private:
