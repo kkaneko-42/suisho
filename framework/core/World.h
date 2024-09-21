@@ -101,7 +101,7 @@ public:
     }
 
     /**
-     * @brief Iterate entities
+     * @brief Iterate component
      * 
      * @tparam T Component type attached to the iterated entities
      * @tparam S Other component types
@@ -110,6 +110,17 @@ public:
     template <class T, class... S>
     void forEachComponent(void(*f)(T&, S&...)) {
         reg_.view<T, S...>().each(f);
+    }
+
+    /**
+     * @brief temporary
+     * @todo documentation
+     */
+    template <class T, class... S>
+    void forEachEntity(void(*f)(Entity)) {
+        for (Entity e : reg_.view<T, S...>()) {
+            f(e);
+        }
     }
 
 private:

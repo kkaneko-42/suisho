@@ -19,6 +19,5 @@ function(configure_test bin srcs)
     target_link_libraries(${bin} PRIVATE suisho_framework gtest gtest_main)
 endfunction(configure_test)
 
-configure_test(suisho_test "${SUISHO_TEST_CORE_SRCS};${SUISHO_TEST_MATH_SRCS}")
-configure_test(core_test ${SUISHO_TEST_CORE_SRCS})
-configure_test(math_test ${SUISHO_TEST_MATH_SRCS})
+configure_test(core_test "${SUISHO_TEST_CORE_SRCS}")
+configure_test(math_test "${SUISHO_TEST_MATH_SRCS}")
