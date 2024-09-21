@@ -16,14 +16,17 @@ public:
      * @param components Components attached to the created entities
      * 
      * @see World::createEntity
-     * @todo Avoid T copying
+     * @todo Support rvalue reference
      */
     template <class... T>
-    void createEntity(T... components) {
-        cmds_.push([...components = components](World& world) {
-            auto e = world.createEntity();
-            ((void)world.addComponent<T>(e, components), ...);
-        });
+    void createEntity(const T&... components) {
+        cmds_.push(std::bind(
+            [](World& world, const T&... components) {
+                auto e = world.createEntity();
+                (world.addComponent<T>(e, components), ...);
+            },
+            std::placeholders::_1, components...
+        ));
     }
 
     /**
@@ -41,9 +44,12 @@ public:
      */
     template <class T, class... Args>
     void addComponent(Entity e, Args&&... args) {
-        cmds_.push([e, ...args = std::forward<Args>(args)](World& world) {
-            world.addComponent<T>(e, std::forward<Args>(args)...);
-        });
+        cmds_.push(std::bind(
+            [e](World& world, Args&&... args) {
+                world.addComponent<T>(e, std::forward<Args>(args)...);
+            },
+            std::placeholders::_1, std::forward<Args>(args)...
+        ));
     }
 
     /**
