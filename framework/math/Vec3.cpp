@@ -59,6 +59,10 @@ Vec3& Vec3::operator+=(const Vec3& rhs) {
     return *this;
 }
 
+Vec3 Vec3::operator-() const {
+    return Vec3(-x, -y, -z);
+}
+
 Vec3 Vec3::operator-(const Vec3& rhs) const {
     Vec3 lhs(*this);
     return (lhs -= rhs);

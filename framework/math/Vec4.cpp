@@ -1,5 +1,6 @@
 #include "Vec4.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace suisho;
 
@@ -57,6 +58,10 @@ Vec4& Vec4::operator+=(const Vec4& rhs) {
     return *this;
 }
 
+Vec4 Vec4::operator-() const {
+    return Vec4(-x, -y, -z, -w);
+}
+
 Vec4 Vec4::operator-(const Vec4& rhs) const {
     Vec4 lhs(*this);
     return (lhs -= rhs);
@@ -94,6 +99,22 @@ Vec4& Vec4::operator/=(float s) {
     z /= s;
     w /= s;
     return *this;
+}
+
+float& Vec4::operator[](std::size_t idx) {
+    if (idx > 4) {
+        throw std::out_of_range("idx is out of range(4)");
+    }
+
+    return (idx == 0 ? x : idx == 1 ? y : z);
+}
+
+const float& Vec4::operator[](std::size_t idx) const {
+    if (idx > 4) {
+        throw std::out_of_range("idx is out of range(4)");
+    }
+
+    return (idx == 0 ? x : idx == 1 ? y : z);
 }
 
 float Vec4::length() const {

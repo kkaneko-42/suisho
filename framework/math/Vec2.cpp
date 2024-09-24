@@ -53,6 +53,10 @@ Vec2& Vec2::operator+=(const Vec2& rhs) {
     return *this;
 }
 
+Vec2 Vec2::operator-() const {
+    return Vec2(-x, -y);
+}
+
 Vec2 Vec2::operator-(const Vec2& rhs) const {
     Vec2 lhs(*this);
     return (lhs -= rhs);

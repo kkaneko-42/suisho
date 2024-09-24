@@ -68,6 +68,9 @@ public:
     /// @return Reference to this after the addition
     Vec4& operator+=(const Vec4& rhs);
 
+    /// @return Flip all element's sign
+    Vec4 operator-() const;
+
     /// @return Vector subtracting each element
     Vec4 operator-(const Vec4& rhs) const;
 
@@ -87,6 +90,18 @@ public:
     /// @brief Divs s to this
     /// @return Reference to this after the division
     inline Vec4& operator/=(float s);
+
+    /// @brief Access to the element by index
+    /// @param idx Element index(x: 1, y: 2, ...)
+    /// @return Reference to the element
+    /// @throw std::out_of_range idx > 4
+    float& operator[](std::size_t idx);
+
+    /// @brief Access to the element by index
+    /// @param idx Element index(x: 1, y: 2, ...)
+    /// @return Const reference to the element
+    /// @throw std::out_of_range idx > 4
+    const float& operator[](std::size_t idx) const;
 
     /// @return Length of this vector
     float length() const;

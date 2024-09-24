@@ -26,10 +26,10 @@ public:
     /// @brief Down-pointing unit vector. In this engine, equals to (0, -1, 0)
     static const Vec3 kDown;
 
-    /// @brief Backward-pointing unit vector. In this engine, equals to (0, 1, 0)
+    /// @brief Backward-pointing unit vector. In this engine, equals to (0, 0, 1)
     static const Vec3 kBack;
 
-    /// @brief Forward-pointing unit vector. In this engine, equals to (0, -1, 0)
+    /// @brief Forward-pointing unit vector. In this engine, equals to (0, 0, -1)
     static const Vec3 kForward;
 
     /// @brief x coord
@@ -81,6 +81,9 @@ public:
     /// @brief Adds rhs to this
     /// @return Reference to this after the addition
     Vec3& operator+=(const Vec3& rhs);
+
+    /// @return Flip all element's sign
+    Vec3 operator-() const;
 
     /// @return Vector subtracting each element
     Vec3 operator-(const Vec3& rhs) const;

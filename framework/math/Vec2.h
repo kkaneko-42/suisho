@@ -72,6 +72,9 @@ public:
     /// @return Reference to this after the addition
     Vec2& operator+=(const Vec2& rhs);
 
+    /// @return Flip all element's sign
+    Vec2 operator-() const;
+
     /// @return Vector subtracting each element
     Vec2 operator-(const Vec2& rhs) const;
 
