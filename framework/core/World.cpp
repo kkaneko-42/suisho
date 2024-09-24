@@ -1,4 +1,5 @@
 #include "core/World.h"
+#include <stdexcept>
 
 using namespace suisho;
 

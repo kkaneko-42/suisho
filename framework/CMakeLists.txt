@@ -7,12 +7,18 @@ find_package(Vulkan REQUIRED)
 include(FetchContent)
 
 FetchContent_Declare(
+	glfw
+	GIT_REPOSITORY https://github.com/glfw/glfw
+	GIT_TAG 3.4
+)
+
+FetchContent_Declare(
     entt
     GIT_REPOSITORY https://github.com/skypjack/entt
     GIT_TAG v3.13.2
 )
 
-FetchContent_MakeAvailable(entt)
+FetchContent_MakeAvailable(glfw entt)
 
 # Gather engine sources
 include(core/CMakeLists.txt)

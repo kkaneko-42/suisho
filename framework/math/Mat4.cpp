@@ -108,7 +108,7 @@ Mat4 Mat4::ortho(double left, double right, double bottom, double top, double ne
 }
 
 Mat4 Mat4::perspective(double fov, double aspect, double near, double far) {
-    const double tan_fov = std::tan(fov * M_PI / 180.0f / 2.0f);
+    const double tan_fov = std::tan(fov * 3.14159265358979 / 180.0f / 2.0f);
     return Mat4(
         1 / (aspect * tan_fov), 0.0f, 0.0f, 0.0f,
         0.0f, 1 / tan_fov, 0.0f, 0.0f,
