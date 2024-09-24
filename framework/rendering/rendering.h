@@ -1,3 +1,4 @@
-#pragma once
+#ifndef SUISHO_CORE_RENDERING_H_
+#define SUISHO_CORE_RENDERING_H_
 
-#include "rendering/vulkan_tutorial.h" // FIXME
+#endif // SUISHO_CORE_RENDERING_H_

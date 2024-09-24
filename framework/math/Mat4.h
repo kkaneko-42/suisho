@@ -1,6 +1,8 @@
 #ifndef SUISHO_MATH_MAT4_H_
 #define SUISHO_MATH_MAT4_H_
 
+#include <cstddef>
+
 namespace suisho {
 
 class Vec3;
@@ -19,14 +21,14 @@ public:
      * @brief Initialize all elements to zero
      * 
      */
-    constexpr Mat4();
+    Mat4();
 
     /**
      * @brief Initialize all elements to the specified values
      * 
      * @param values Elements value
      */
-    constexpr Mat4(
+    Mat4(
         float m00, float m01, float m02, float m03,
         float m10, float m11, float m12, float m13,
         float m20, float m21, float m22, float m23,
@@ -74,6 +76,15 @@ public:
     static Mat4 translate(const Vec3& xlate);
 
     /**
+     * @brief Create a rotation matrix
+     * 
+     * @param degree Rotation angle in degree
+     * @param axis Rotation axis
+     * @return The rotation matrix
+     */
+    static Mat4 rotate(float degree, const Vec3& axis);
+
+    /**
      * @brief Create a scaling matrix
      * 
      * @param scale Scaling value
@@ -89,7 +100,7 @@ public:
      * @param up Up direction
      * @return Created matrix
      */
-    static Mat4 lookAt(const Vec3& from, const Vec3& to, const Vec3& up = Vec3::kUp);
+    static Mat4 lookAt(const Vec3& from, const Vec3& to, const Vec3& up);
 
     /**
      * @brief Creates an orthographic projection matrix
@@ -147,6 +158,10 @@ public:
     Mat4 operator*(const Mat4& rhs) const;
 
     Vec4 operator*(const Vec4& rhs) const;
+
+    float* operator[](std::size_t idx) { return values_[idx]; }
+
+    const float* operator[](std::size_t idx) const { return values_[idx]; }
 
 private:
     float values_[4][4];

@@ -73,6 +73,11 @@ Mat4 Mat4::translate(const Vec3& xlate) {
     );
 }
 
+Mat4 Mat4::rotate(float deg, const Vec3& axis) {
+    // TODO: impl
+    return kI;
+}
+
 Mat4 Mat4::scale(const Vec3& s) {
     return Mat4(
         s.x , 0.0f, 0.0f, 0.0f,

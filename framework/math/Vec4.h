@@ -1,6 +1,8 @@
 #ifndef SUISHO_MATH_VEC4_H_
 #define SUISHO_MATH_VEC4_H_
 
+#include <cstddef>
+
 namespace suisho {
 
 /**
