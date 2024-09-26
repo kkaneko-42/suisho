@@ -74,8 +74,20 @@ Mat4 Mat4::translate(const Vec3& xlate) {
 }
 
 Mat4 Mat4::rotate(float deg, const Vec3& axis) {
-    // TODO: impl
-    return kI;
+    constexpr float kPi = 3.1415926535; // FIXME
+    const float rad = deg * kPi / 180.0f; // Angle in radius
+    const float c = std::cos(rad);
+    const float s = std::sin(rad);
+    const float x = axis.x;
+    const float y = axis.y;
+    const float z = axis.z;
+
+    return Mat4(
+        x*x*(1 - c) + c, x*y*(1 - c) - z*s, x*z*(1 - c) + y*s, 0.0f,
+        x*y*(1 - c) + z*s, y*y*(1 - c) + c, y*z*(1 - c) - x*s, 0.0f,
+        x*z*(1 - c) - y*s, y*z*(1 - c) + x*s, z*z*(1 - c) + c, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    );
 }
 
 Mat4 Mat4::scale(const Vec3& s) {
