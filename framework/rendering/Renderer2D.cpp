@@ -1186,9 +1186,7 @@ struct Renderer2DImpl {
         float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
         UniformBufferObject ubo{};
-        // ubo.model = Mat4::rotate(time * 90.0f, Vec3(0.0f, 0.0f, 1.0f));
-        // ubo.view = Mat4::lookAt(Vec3(2.0f, 2.0f, 2.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f));
-        ubo.model = Mat4::kI;
+        ubo.model = Mat4::rotate(time * 90.0f, Vec3(0.0f, 0.0f, 1.0f));
         ubo.view = Mat4::lookAt(
             Vec3(0.0f, 0.0f, -3.0f),
             Vec3::kZero,
