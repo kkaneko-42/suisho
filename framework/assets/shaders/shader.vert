@@ -8,10 +8,10 @@ layout(row_major, binding = 0) uniform UniformBufferObject {
 
 layout(location = 0) out vec2 fragTexCoord;
 
-// Counter clock wise rectangle(begin with the first quadrant)
+// Counter clock wise strip rectangle
 const vec2[4] vertices = vec2[](
-    vec2(0.5, 0.5), vec2(-0.5, 0.5),
-    vec2(-0.5, -0.5), vec2(0.5, -0.5)
+    vec2(0.5, -0.5), vec2(-0.5, -0.5),
+    vec2(0.5, 0.5), vec2(-0.5, 0.5)
 );
 
 const vec2[4] uvs = vec2[](
