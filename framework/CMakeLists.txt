@@ -34,7 +34,8 @@ add_library(suisho_framework STATIC ${SUISHO_FRAMEWORK_SRCS})
 
 target_compile_features(suisho_framework PUBLIC cxx_std_17)
 target_include_directories(suisho_framework PUBLIC ./)
-target_include_directories(suisho_framework PUBLIC ${entt_SOURCE_DIR}/src)
+target_include_directories(suisho_framework PUBLIC ${Vulkan_INCLUDE_DIR})
 target_include_directories(suisho_framework PUBLIC ${glfw_SOURCE_DIR}/include)
+target_include_directories(suisho_framework PUBLIC ${entt_SOURCE_DIR}/src)
 
-target_link_libraries(suisho_framework INTERFACE EnTT glfw Vulkan::Vulkan)
+target_link_libraries(suisho_framework INTERFACE Vulkan::Vulkan glfw EnTT)

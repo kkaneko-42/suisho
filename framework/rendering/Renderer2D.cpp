@@ -29,17 +29,14 @@ void Renderer2D::terminate() {
 
 }
 
-
-/*
-
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include <rendering/stb_image.h>
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+#include <rendering/tiny_obj_loader.h>
 
 #include <iostream>
 #include <fstream>
@@ -58,6 +55,7 @@ void Renderer2D::terminate() {
 
 #include "math/suisho_math.h"
 
+/*
 #ifndef SUISHO_VK_TUTORIAL_RESOURCES_DIR
 #define SUISHO_VK_TUTORIAL_RESOURCES_DIR "./"
 #endif
