@@ -17,6 +17,7 @@ public:
     Renderer2D& operator=(const Renderer2D&) = delete;
 
     bool initialize();
+    bool shouldWindowClose() const; // FIXME
     void draw();
     void terminate();
 

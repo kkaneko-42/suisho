@@ -14,5 +14,9 @@ RenderingSystem::~RenderingSystem() {
 }
 
 void RenderingSystem::update(Params& params) {
+    if (renderer_.shouldWindowClose()) {
+        exit(1);
+    }
+
     renderer_.draw();
 }
