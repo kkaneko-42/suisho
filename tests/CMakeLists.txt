@@ -2,6 +2,7 @@ project(suisho_test CXX)
 
 include(FetchContent)
 
+set(gtest_force_shared_crt on)
 FetchContent_Declare(
     gtest
     GIT_REPOSITORY https://github.com/google/googletest
