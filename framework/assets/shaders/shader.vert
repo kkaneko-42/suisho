@@ -6,6 +6,10 @@ layout(row_major, binding = 0) uniform UniformBufferObject {
     mat4 proj;
 } ubo;
 
+layout(row_major, binding = 2) uniform DynamicUniformBufferObject {
+    mat4 model;
+} dynamic;
+
 layout(location = 0) out vec2 fragTexCoord;
 
 // Counter clock wise strip rectangle
@@ -20,6 +24,6 @@ const vec2[4] uvs = vec2[](
 );
 
 void main() {
-    gl_Position = ubo.proj * ubo.view * ubo.model * vec4(vertices[gl_VertexIndex], 0.0, 1.0);
+    gl_Position = ubo.proj * ubo.view * dynamic.model * vec4(vertices[gl_VertexIndex], 0.0, 1.0);
     fragTexCoord = uvs[gl_VertexIndex];
 }

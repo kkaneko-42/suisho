@@ -36,6 +36,8 @@ const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
+constexpr size_t kMaxObjectsCount = 128;
+
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
@@ -161,6 +163,10 @@ struct UniformBufferObject {
     alignas(16) Mat4 proj;
 };
 
+struct DynamicUniformBufferObject {
+    alignas(16) Mat4 model;
+};
+
 namespace suisho {
 
 struct Renderer2DImpl {
@@ -224,6 +230,10 @@ struct Renderer2DImpl {
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
     std::vector<void*> uniformBuffersMapped;
+    uint32_t dynamicAlignment;
+    std::vector<VkBuffer> dynamicUniformBuffers;
+    std::vector<VkDeviceMemory> dynamicUniformBuffersMemory;
+    std::vector<void*> dynamicUniformBuffersMapped;
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -267,6 +277,7 @@ struct Renderer2DImpl {
         createDepthResources();
         createFramebuffers();
         createUniformBuffers();
+        createDynamicUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
         createCommandBuffers();
@@ -308,6 +319,8 @@ struct Renderer2DImpl {
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroyBuffer(device, uniformBuffers[i], nullptr);
             vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+            vkDestroyBuffer(device, dynamicUniformBuffers[i], nullptr);
+            vkFreeMemory(device, dynamicUniformBuffersMemory[i], nullptr);
         }
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
@@ -433,6 +446,7 @@ struct Renderer2DImpl {
         for (const auto& device : devices) {
             if (isDeviceSuitable(device)) {
                 physicalDevice = device;
+                dynamicAlignment = getDynamicAlignment(sizeof(DynamicUniformBufferObject));
                 break;
             }
         }
@@ -614,7 +628,14 @@ struct Renderer2DImpl {
         uboLayoutBinding.pImmutableSamplers = nullptr;
         uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-        std::array<VkDescriptorSetLayoutBinding, 1> bindings = { uboLayoutBinding };
+        VkDescriptorSetLayoutBinding dynamicUboBinding{};
+        dynamicUboBinding.binding = 2;
+        dynamicUboBinding.descriptorCount = 1;
+        dynamicUboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        dynamicUboBinding.pImmutableSamplers = nullptr;
+        dynamicUboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, dynamicUboBinding };
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -961,12 +982,32 @@ struct Renderer2DImpl {
         }
     }
 
+    void createDynamicUniformBuffers() {
+        VkDeviceSize bufferSize = dynamicAlignment * kMaxObjectsCount;
+
+        dynamicUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        dynamicUniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+        dynamicUniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            createBuffer(
+                bufferSize,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+                dynamicUniformBuffers[i], dynamicUniformBuffersMemory[i]
+            );
+            vkMapMemory(device, dynamicUniformBuffersMemory[i], 0, bufferSize, 0, &dynamicUniformBuffersMapped[i]);
+        }
+    }
+
     void createDescriptorPool() {
-        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        std::array<VkDescriptorPoolSize, 3> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -998,7 +1039,12 @@ struct Renderer2DImpl {
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
-            std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+            VkDescriptorBufferInfo dynamicBufferInfo{};
+            dynamicBufferInfo.buffer = dynamicUniformBuffers[i];
+            dynamicBufferInfo.offset = 0;
+            dynamicBufferInfo.range = dynamicAlignment;
+
+            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSets[i];
             descriptorWrites[0].dstBinding = 0;
@@ -1006,6 +1052,14 @@ struct Renderer2DImpl {
             descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[0].descriptorCount = 1;
             descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+            descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[1].dstSet = descriptorSets[i];
+            descriptorWrites[1].dstBinding = 2;
+            descriptorWrites[1].dstArrayElement = 0;
+            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            descriptorWrites[1].descriptorCount = 1;
+            descriptorWrites[1].pBufferInfo = &dynamicBufferInfo;
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -1147,9 +1201,29 @@ struct Renderer2DImpl {
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+        for (int32_t y = 0; y < 10; ++y) {
+            for (int32_t x = 0; x < 10; ++x) {
+                const uint32_t dynamicOffset = (y * 10 + x) * dynamicAlignment;
+                auto& dst = *reinterpret_cast<DynamicUniformBufferObject*>(reinterpret_cast<uintptr_t>(dynamicUniformBuffersMapped[currentFrame]) + dynamicOffset);
+                dst.model = Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f));
 
-        vkCmdDraw(commandBuffer, 4, 1, 0, 0);
+                vkCmdBindDescriptorSets(
+                    commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout,
+                    0, 1,
+                    &descriptorSets[currentFrame], 1, &dynamicOffset
+                );
+                vkCmdDraw(commandBuffer, 4, 1, 0, 0);
+            }
+        }
+
+        // flush dynamic uniform buffer update
+        VkMappedMemoryRange flushRange{};
+        flushRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        flushRange.memory = dynamicUniformBuffersMemory[currentFrame];
+        flushRange.size = dynamicAlignment * 100;
+        vkFlushMappedMemoryRanges(device, 1, &flushRange);
 
         vkCmdEndRenderPass(commandBuffer);
 
@@ -1276,6 +1350,19 @@ struct Renderer2DImpl {
         }
 
         return shaderModule;
+    }
+
+    VkDeviceSize getDynamicAlignment(size_t elemSize) {
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(physicalDevice, &props);
+
+        VkDeviceSize result = elemSize;
+        const VkDeviceSize minAlign = props.limits.minUniformBufferOffsetAlignment;
+        if (props.limits.minUniformBufferOffsetAlignment > 0) {
+            result = (result + minAlign - 1) & ~(minAlign - 1);
+        }
+
+        return result;
     }
 
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
