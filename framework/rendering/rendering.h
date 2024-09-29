@@ -1,7 +1,7 @@
-#ifndef SUISHO_CORE_RENDERING_H_
-#define SUISHO_CORE_RENDERING_H_
+#ifndef SUISHO_RENDERING_H_
+#define SUISHO_RENDERING_H_
 
 #include "rendering/Renderer2D.h"
 #include "rendering/RenderingSystem.h"
 
-#endif // SUISHO_CORE_RENDERING_H_
+#endif // SUISHO_RENDERING_H_
