@@ -259,7 +259,8 @@ struct Renderer2DImpl {
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> globalDescriptorSets;
-    Material material;
+    Material mandrill_material;
+    Material statue_material;
     std::vector<VkDescriptorSet> objectDescriptorSets;
 
     std::vector<VkCommandBuffer> commandBuffers;
@@ -306,7 +307,8 @@ struct Renderer2DImpl {
         createDescriptorSets();
         createCommandBuffers();
         createSyncObjects();
-        material = Material::create(*this, SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png");
+        mandrill_material = Material::create(*this, SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png");
+        statue_material = Material::create(*this, SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg");
         createGraphicsPipeline();
     }
 
@@ -770,7 +772,7 @@ struct Renderer2DImpl {
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        VkDescriptorSetLayout layouts[] = { globalDescriptorSetLayout, material.layout, objectDescriptorSetLayout };
+        VkDescriptorSetLayout layouts[] = { globalDescriptorSetLayout, mandrill_material.layout, objectDescriptorSetLayout };
         pipelineLayoutInfo.setLayoutCount = 3;
         pipelineLayoutInfo.pSetLayouts = layouts;
         if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
@@ -1241,14 +1243,42 @@ struct Renderer2DImpl {
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        // Bind static descriptors
-        VkDescriptorSet sets[] = { globalDescriptorSets[currentFrame], material.descriptor };
+        // Bind globaldescriptors
         vkCmdBindDescriptorSets(
             commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-            0, 2, sets, 0, nullptr
+            0, 1, &globalDescriptorSets[currentFrame], 0, nullptr
         );
-        for (int32_t y = 0; y < 10; ++y) {
-            for (int32_t x = 0; x < 10; ++x) {
+        // Bind material
+        vkCmdBindDescriptorSets(
+            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+            1, 1, &mandrill_material.descriptor,
+            0, nullptr
+        );
+        for (int32_t y = 0; y < 5; ++y) {
+            for (int32_t x = 0; x < 5; ++x) {
+                const uint32_t dynamicOffset = (y * 10 + x) * dynamicAlignment;
+                auto& dst = *reinterpret_cast<DynamicUniformBufferObject*>(reinterpret_cast<uintptr_t>(dynamicUniformBuffersMapped[currentFrame]) + dynamicOffset);
+                dst.model = Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f));
+
+                vkCmdBindDescriptorSets(
+                    commandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout,
+                    2, 1,
+                    &objectDescriptorSets[currentFrame], 1, &dynamicOffset
+                );
+                vkCmdDraw(commandBuffer, 4, 1, 0, 0);
+            }
+        }
+
+        // Bind other material
+        vkCmdBindDescriptorSets(
+            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+            1, 1, &statue_material.descriptor,
+            0, nullptr
+        );
+        for (int32_t y = 5; y < 10; ++y) {
+            for (int32_t x = 5; x < 10; ++x) {
                 const uint32_t dynamicOffset = (y * 10 + x) * dynamicAlignment;
                 auto& dst = *reinterpret_cast<DynamicUniformBufferObject*>(reinterpret_cast<uintptr_t>(dynamicUniformBuffersMapped[currentFrame]) + dynamicOffset);
                 dst.model = Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f));
