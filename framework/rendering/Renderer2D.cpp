@@ -167,6 +167,27 @@ struct DynamicUniformBufferObject {
     alignas(16) Mat4 model;
 };
 
+struct Texture {
+    VkImage image;
+    VkDeviceMemory memory;
+    VkImageView view;
+    VkSampler sampler;
+};
+
+struct Material {
+    static Material create(Renderer2DImpl& impl, const char* filepath);
+    Texture texture;
+    VkDescriptorSetLayout layout;
+    VkDescriptorSet descriptor;
+
+private:
+    void createTextureImage(Renderer2DImpl& impl, const char* filepath);
+    void createTextureImageView(Renderer2DImpl& impl);
+    void createTextureSampler(Renderer2DImpl& impl);
+    void createDescriptorSetLayout(Renderer2DImpl& impl);
+    void createDescriptorSet(Renderer2DImpl& impl);
+};
+
 namespace suisho {
 
 struct Renderer2DImpl {
@@ -237,6 +258,7 @@ struct Renderer2DImpl {
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
+    Material material;
 
     std::vector<VkCommandBuffer> commandBuffers;
 
@@ -272,7 +294,7 @@ struct Renderer2DImpl {
         createImageViews();
         createRenderPass();
         createDescriptorSetLayout();
-        createGraphicsPipeline();
+        // createGraphicsPipeline();
         createCommandPool();
         createDepthResources();
         createFramebuffers();
@@ -282,6 +304,8 @@ struct Renderer2DImpl {
         createDescriptorSets();
         createCommandBuffers();
         createSyncObjects();
+        material = Material::create(*this, SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png");
+        createGraphicsPipeline();
     }
 
     void mainLoop() {
@@ -737,8 +761,11 @@ struct Renderer2DImpl {
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+        // pipelineLayoutInfo.setLayoutCount = 1;
+        // pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+        VkDescriptorSetLayout layouts[] = { descriptorSetLayout, material.layout };
+        pipelineLayoutInfo.setLayoutCount = 2;
+        pipelineLayoutInfo.pSetLayouts = layouts;
 
         if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create pipeline layout!");
@@ -1005,7 +1032,7 @@ struct Renderer2DImpl {
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].descriptorCount = 32;
         poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
@@ -1013,7 +1040,7 @@ struct Renderer2DImpl {
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolInfo.maxSets = 32;
 
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
@@ -1201,6 +1228,8 @@ struct Renderer2DImpl {
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+        // Bind material
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1, &material.descriptor, 0, nullptr);
         for (int32_t y = 0; y < 10; ++y) {
             for (int32_t x = 0; x < 10; ++x) {
                 const uint32_t dynamicOffset = (y * 10 + x) * dynamicAlignment;
@@ -1580,4 +1609,120 @@ bool Renderer2D::initialize() {
 
 void Renderer2D::terminate() {
     impl_->terminate();
+}
+
+Material Material::create(Renderer2DImpl& impl, const char* filepath) {
+    Material material{};
+    material.createTextureImage(impl, filepath);
+    material.createTextureImageView(impl);
+    material.createTextureSampler(impl);
+    material.createDescriptorSetLayout(impl);
+    material.createDescriptorSet(impl);
+    return material;
+}
+
+void Material::createTextureImage(Renderer2DImpl& impl, const char* filepath) {
+    int texWidth, texHeight, texChannels;
+    stbi_uc* pixels = stbi_load(filepath, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    VkDeviceSize imageSize = texWidth * texHeight * 4;
+
+    if (!pixels) {
+        throw std::runtime_error("failed to load texture image!");
+    }
+
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    impl.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(impl.device, stagingBufferMemory, 0, imageSize, 0, &data);
+    memcpy(data, pixels, static_cast<size_t>(imageSize));
+    vkUnmapMemory(impl.device, stagingBufferMemory);
+
+    stbi_image_free(pixels);
+
+    impl.createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, texture.image, texture.memory);
+
+    impl.transitionImageLayout(texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    impl.copyBufferToImage(stagingBuffer, texture.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+    impl.transitionImageLayout(texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+    vkDestroyBuffer(impl.device, stagingBuffer, nullptr);
+    vkFreeMemory(impl.device, stagingBufferMemory, nullptr);
+}
+
+void Material::createTextureImageView(Renderer2DImpl& impl) {
+    texture.view = impl.createImageView(texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+}
+
+void Material::createTextureSampler(Renderer2DImpl& impl) {
+    VkPhysicalDeviceProperties properties{};
+    vkGetPhysicalDeviceProperties(impl.physicalDevice, &properties);
+
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_LINEAR;
+    samplerInfo.minFilter = VK_FILTER_LINEAR;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+    samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+    if (vkCreateSampler(impl.device, &samplerInfo, nullptr, &texture.sampler) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create texture sampler!");
+    }
+}
+
+void Material::createDescriptorSetLayout(Renderer2DImpl& impl) {
+    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+    samplerLayoutBinding.binding = 0;
+    samplerLayoutBinding.descriptorCount = 1;
+    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerLayoutBinding.pImmutableSamplers = nullptr;
+    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    std::array<VkDescriptorSetLayoutBinding, 1> bindings = { samplerLayoutBinding };
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings = bindings.data();
+
+    if (vkCreateDescriptorSetLayout(impl.device, &layoutInfo, nullptr, &layout) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create descriptor set layout!");
+    }
+}
+
+void Material::createDescriptorSet(Renderer2DImpl& impl) {
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = impl.descriptorPool;
+    allocInfo.descriptorSetCount = 1;
+    allocInfo.pSetLayouts = &layout;
+    VkResult ret = vkAllocateDescriptorSets(impl.device, &allocInfo, &descriptor);
+    if (ret != VK_SUCCESS) {
+        std::cerr << ret << std::endl;
+        throw std::runtime_error("failed to allocate descriptor sets!");
+    }
+
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = texture.view;
+    imageInfo.sampler = texture.sampler;
+
+    std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
+    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[0].dstSet = descriptor;
+    descriptorWrites[0].dstBinding = 0;
+    descriptorWrites[0].dstArrayElement = 0;
+    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[0].descriptorCount = 1;
+    descriptorWrites[0].pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(impl.device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 }
