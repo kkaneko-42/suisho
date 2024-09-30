@@ -509,7 +509,8 @@ struct Renderer2DImpl {
         }
 
         VkPhysicalDeviceFeatures deviceFeatures{};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        // deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.samplerAnisotropy = VK_FALSE;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -1502,7 +1503,7 @@ struct Renderer2DImpl {
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+        return indices.isComplete() && extensionsSupported && swapChainAdequate;
     }
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
@@ -1717,8 +1718,9 @@ static void createTextureSampler(Renderer2DImpl& impl, VkSampler& out) {
     samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.anisotropyEnable = VK_TRUE;
-    samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+    // samplerInfo.anisotropyEnable = VK_TRUE;
+    // samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+    samplerInfo.anisotropyEnable = VK_FALSE;
     samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     samplerInfo.unnormalizedCoordinates = VK_FALSE;
     samplerInfo.compareEnable = VK_FALSE;
