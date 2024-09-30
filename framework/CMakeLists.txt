@@ -18,7 +18,13 @@ FetchContent_Declare(
     GIT_TAG v3.13.2
 )
 
-FetchContent_MakeAvailable(glfw entt)
+FetchContent_Declare(
+    freetype
+    GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype
+    GIT_TAG VER-2-13-3
+)
+
+FetchContent_MakeAvailable(glfw entt freetype)
 
 # Gather engine sources
 include(core/CMakeLists.txt)
@@ -38,5 +44,6 @@ target_include_directories(suisho_framework PUBLIC ./)
 target_include_directories(suisho_framework PUBLIC ${Vulkan_INCLUDE_DIR})
 target_include_directories(suisho_framework PUBLIC ${glfw_SOURCE_DIR}/include)
 target_include_directories(suisho_framework PUBLIC ${entt_SOURCE_DIR}/src)
+target_include_directories(suisho_framework PUBLIC ${freetype_SOURCE_DIR}/include)
 
-target_link_libraries(suisho_framework INTERFACE Vulkan::Vulkan glfw EnTT)
+target_link_libraries(suisho_framework INTERFACE Vulkan::Vulkan glfw EnTT freetype)
