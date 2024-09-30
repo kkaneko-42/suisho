@@ -238,7 +238,8 @@ struct Renderer2DImpl {
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
     VkRenderPass renderPass;
-    VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorSetLayout globalDescriptorSetLayout;
+    VkDescriptorSetLayout objectDescriptorSetLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
@@ -257,8 +258,9 @@ struct Renderer2DImpl {
     std::vector<void*> dynamicUniformBuffersMapped;
 
     VkDescriptorPool descriptorPool;
-    std::vector<VkDescriptorSet> descriptorSets;
+    std::vector<VkDescriptorSet> globalDescriptorSets;
     Material material;
+    std::vector<VkDescriptorSet> objectDescriptorSets;
 
     std::vector<VkCommandBuffer> commandBuffers;
 
@@ -349,7 +351,8 @@ struct Renderer2DImpl {
 
         vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 
-        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+        vkDestroyDescriptorSetLayout(device, globalDescriptorSetLayout, nullptr);
+        vkDestroyDescriptorSetLayout(device, objectDescriptorSetLayout, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -645,27 +648,33 @@ struct Renderer2DImpl {
     }
 
     void createDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        // Create global
+        VkDescriptorSetLayoutBinding cameraBinding{};
+        cameraBinding.binding = 0;
+        cameraBinding.descriptorCount = 1;
+        cameraBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        cameraBinding.pImmutableSamplers = nullptr;
+        cameraBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        VkDescriptorSetLayoutCreateInfo globalLayoutInfo{};
+        globalLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        globalLayoutInfo.bindingCount = 1;
+        globalLayoutInfo.pBindings = &cameraBinding;
+        if (vkCreateDescriptorSetLayout(device, &globalLayoutInfo, nullptr, &globalDescriptorSetLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
 
-        VkDescriptorSetLayoutBinding dynamicUboBinding{};
-        dynamicUboBinding.binding = 2;
-        dynamicUboBinding.descriptorCount = 1;
-        dynamicUboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        dynamicUboBinding.pImmutableSamplers = nullptr;
-        dynamicUboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, dynamicUboBinding };
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
+        // Create per object
+        VkDescriptorSetLayoutBinding modelMatrixBinding{};
+        modelMatrixBinding.binding = 0;
+        modelMatrixBinding.descriptorCount = 1;
+        modelMatrixBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        modelMatrixBinding.pImmutableSamplers = nullptr;
+        modelMatrixBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        VkDescriptorSetLayoutCreateInfo objectLayoutInfo{};
+        objectLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        objectLayoutInfo.bindingCount = 1;
+        objectLayoutInfo.pBindings = &modelMatrixBinding;
+        if (vkCreateDescriptorSetLayout(device, &objectLayoutInfo, nullptr, &objectDescriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
     }
@@ -761,12 +770,9 @@ struct Renderer2DImpl {
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        // pipelineLayoutInfo.setLayoutCount = 1;
-        // pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-        VkDescriptorSetLayout layouts[] = { descriptorSetLayout, material.layout };
-        pipelineLayoutInfo.setLayoutCount = 2;
+        VkDescriptorSetLayout layouts[] = { globalDescriptorSetLayout, material.layout, objectDescriptorSetLayout };
+        pipelineLayoutInfo.setLayoutCount = 3;
         pipelineLayoutInfo.pSetLayouts = layouts;
-
         if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create pipeline layout!");
         }
@@ -1048,45 +1054,52 @@ struct Renderer2DImpl {
     }
 
     void createDescriptorSets() {
-        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+        // Allocate global
+        std::vector<VkDescriptorSetLayout> globalLayouts(MAX_FRAMES_IN_FLIGHT, globalDescriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
         allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-        allocInfo.pSetLayouts = layouts.data();
+        allocInfo.pSetLayouts = globalLayouts.data();
+        globalDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        if (vkAllocateDescriptorSets(device, &allocInfo, globalDescriptorSets.data()) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
 
-        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-        if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
+        // Allocate object(dynamic uniform buffer)
+        std::vector<VkDescriptorSetLayout> objectLayouts(MAX_FRAMES_IN_FLIGHT, objectDescriptorSetLayout);
+        allocInfo.pSetLayouts = objectLayouts.data();
+        objectDescriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        if (vkAllocateDescriptorSets(device, &allocInfo, objectDescriptorSets.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffers[i];
-            bufferInfo.offset = 0;
-            bufferInfo.range = sizeof(UniformBufferObject);
+            VkDescriptorBufferInfo cameraBufferInfo{};
+            cameraBufferInfo.buffer = uniformBuffers[i];
+            cameraBufferInfo.offset = 0;
+            cameraBufferInfo.range = sizeof(UniformBufferObject);
 
-            VkDescriptorBufferInfo dynamicBufferInfo{};
-            dynamicBufferInfo.buffer = dynamicUniformBuffers[i];
-            dynamicBufferInfo.offset = 0;
-            dynamicBufferInfo.range = dynamicAlignment;
+            VkDescriptorBufferInfo modelMatrixBufferInfo{};
+            modelMatrixBufferInfo.buffer = dynamicUniformBuffers[i];
+            modelMatrixBufferInfo.offset = 0;
+            modelMatrixBufferInfo.range = dynamicAlignment;
 
             std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[0].dstSet = descriptorSets[i];
+            descriptorWrites[0].dstSet = globalDescriptorSets[i];
             descriptorWrites[0].dstBinding = 0;
             descriptorWrites[0].dstArrayElement = 0;
             descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
             descriptorWrites[0].descriptorCount = 1;
-            descriptorWrites[0].pBufferInfo = &bufferInfo;
-
+            descriptorWrites[0].pBufferInfo = &cameraBufferInfo;
             descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[1].dstSet = descriptorSets[i];
-            descriptorWrites[1].dstBinding = 2;
+            descriptorWrites[1].dstSet = objectDescriptorSets[i];
+            descriptorWrites[1].dstBinding = 0;
             descriptorWrites[1].dstArrayElement = 0;
             descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
             descriptorWrites[1].descriptorCount = 1;
-            descriptorWrites[1].pBufferInfo = &dynamicBufferInfo;
+            descriptorWrites[1].pBufferInfo = &modelMatrixBufferInfo;
 
             vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
         }
@@ -1228,8 +1241,12 @@ struct Renderer2DImpl {
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        // Bind material
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 1, 1, &material.descriptor, 0, nullptr);
+        // Bind static descriptors
+        VkDescriptorSet sets[] = { globalDescriptorSets[currentFrame], material.descriptor };
+        vkCmdBindDescriptorSets(
+            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+            0, 2, sets, 0, nullptr
+        );
         for (int32_t y = 0; y < 10; ++y) {
             for (int32_t x = 0; x < 10; ++x) {
                 const uint32_t dynamicOffset = (y * 10 + x) * dynamicAlignment;
@@ -1240,8 +1257,8 @@ struct Renderer2DImpl {
                     commandBuffer,
                     VK_PIPELINE_BIND_POINT_GRAPHICS,
                     pipelineLayout,
-                    0, 1,
-                    &descriptorSets[currentFrame], 1, &dynamicOffset
+                    2, 1,
+                    &objectDescriptorSets[currentFrame], 1, &dynamicOffset
                 );
                 vkCmdDraw(commandBuffer, 4, 1, 0, 0);
             }
