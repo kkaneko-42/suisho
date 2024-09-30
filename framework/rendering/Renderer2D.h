@@ -1,8 +1,8 @@
 ﻿#ifndef SUISHO_RENDERING_RENDERER_2D_H_
 #define SUISHO_RENDERING_RENDERER_2D_H_
 
+#include "rendering/Material.h"
 #include "math/Mat4.h"
-#include <memory>
 
 namespace suisho {
 
@@ -18,8 +18,14 @@ public:
 
     bool initialize();
     bool shouldWindowClose() const; // FIXME
+    bool beginFrame();
+    void bindMaterial(const Material& material);
+    void setLocalToWorld(const Mat4& xform);
     void draw();
+    void endFrame();
     void terminate();
+
+    Material createMaterial(const char* texture_path);
 
 private:
     Renderer2DImpl* impl_;

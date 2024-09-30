@@ -23,6 +23,13 @@
 
 #include "math/suisho_math.h"
 
+using namespace suisho;
+
+static void createTextureImage(Renderer2DImpl& impl, const char* filepath, Texture& out);
+static void createTextureSampler(Renderer2DImpl& impl, VkSampler& out);
+static void createDescriptorSetLayout(Renderer2DImpl& impl, VkDescriptorSetLayout& layout);
+static void createDescriptorSet(Renderer2DImpl& impl, Material& out);
+
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
@@ -75,8 +82,6 @@ struct SwapChainSupportDetails {
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 };
-
-using namespace suisho;
 
 struct Vertex {
     Vec3 pos;
@@ -167,27 +172,6 @@ struct DynamicUniformBufferObject {
     alignas(16) Mat4 model;
 };
 
-struct Texture {
-    VkImage image;
-    VkDeviceMemory memory;
-    VkImageView view;
-    VkSampler sampler;
-};
-
-struct Material {
-    static Material create(Renderer2DImpl& impl, const char* filepath);
-    Texture texture;
-    VkDescriptorSetLayout layout;
-    VkDescriptorSet descriptor;
-
-private:
-    void createTextureImage(Renderer2DImpl& impl, const char* filepath);
-    void createTextureImageView(Renderer2DImpl& impl);
-    void createTextureSampler(Renderer2DImpl& impl);
-    void createDescriptorSetLayout(Renderer2DImpl& impl);
-    void createDescriptorSet(Renderer2DImpl& impl);
-};
-
 namespace suisho {
 
 struct Renderer2DImpl {
@@ -198,7 +182,20 @@ struct Renderer2DImpl {
     }
 
     void draw() {
-        drawFrame();
+        // Bind object descriptor
+        const uint32_t dynamicOffset = drawedCount * dynamicAlignment;
+        vkCmdBindDescriptorSets(
+            commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipelineLayout,
+            2, 1, &objectDescriptorSets[currentFrame],
+            1, &dynamicOffset
+        );
+
+        // Draw call
+        vkCmdDraw(commandBuffers[currentFrame], 4, 1, 0, 0);
+
+        // Count up
+        ++drawedCount;
     }
 
     void terminate() {
@@ -209,13 +206,6 @@ struct Renderer2DImpl {
     bool shouldWindowClose() const {
         glfwPollEvents();
         return glfwWindowShouldClose(window);
-    }
-
-    void run() {
-        initWindow();
-        initVulkan();
-        mainLoop();
-        cleanup();
     }
 
     GLFWwindow* window;
@@ -239,6 +229,8 @@ struct Renderer2DImpl {
 
     VkRenderPass renderPass;
     VkDescriptorSetLayout globalDescriptorSetLayout;
+    VkDescriptorSetLayout materialLayout;
+    Material defaultMaterial;
     VkDescriptorSetLayout objectDescriptorSetLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
@@ -259,8 +251,6 @@ struct Renderer2DImpl {
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> globalDescriptorSets;
-    Material mandrill_material;
-    Material statue_material;
     std::vector<VkDescriptorSet> objectDescriptorSets;
 
     std::vector<VkCommandBuffer> commandBuffers;
@@ -269,6 +259,8 @@ struct Renderer2DImpl {
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
+    uint32_t currentImageIndex = 0;
+    size_t drawedCount = 0;
 
     bool framebufferResized = false;
 
@@ -297,7 +289,7 @@ struct Renderer2DImpl {
         createImageViews();
         createRenderPass();
         createDescriptorSetLayout();
-        // createGraphicsPipeline();
+        createGraphicsPipeline();
         createCommandPool();
         createDepthResources();
         createFramebuffers();
@@ -307,18 +299,33 @@ struct Renderer2DImpl {
         createDescriptorSets();
         createCommandBuffers();
         createSyncObjects();
-        mandrill_material = Material::create(*this, SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png");
-        statue_material = Material::create(*this, SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg");
-        createGraphicsPipeline();
+        createDefaultMaterial();
     }
 
-    void mainLoop() {
-        while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
-            drawFrame();
-        }
+    void createDefaultMaterial() {
+        const std::pair<uint32_t, uint32_t> extent = { 8, 8 };
+        const VkDeviceSize imageSize = extent.first * extent.second * 4;
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        vkDeviceWaitIdle(device);
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+        memset(data, 0xff, imageSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createImage(extent.first, extent.second, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, defaultMaterial.texture.image, defaultMaterial.texture.memory);
+        transitionImageLayout(defaultMaterial.texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        copyBufferToImage(stagingBuffer, defaultMaterial.texture.image, static_cast<uint32_t>(extent.first), static_cast<uint32_t>(extent.second));
+        transitionImageLayout(defaultMaterial.texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+
+        defaultMaterial.texture.view = createImageView(defaultMaterial.texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+        createTextureSampler(*this, defaultMaterial.texture.sampler);
+        defaultMaterial.layout = materialLayout;
+        createDescriptorSet(*this, defaultMaterial);
     }
 
     void cleanupSwapChain() {
@@ -665,6 +672,22 @@ struct Renderer2DImpl {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
 
+        // Create layout for material
+        // FIXME: Creatable layout(not static)
+        VkDescriptorSetLayoutBinding textureBinding{};
+        textureBinding.binding = 0;
+        textureBinding.descriptorCount = 1;
+        textureBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        textureBinding.pImmutableSamplers = nullptr;
+        textureBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        VkDescriptorSetLayoutCreateInfo materialLayoutInfo{};
+        materialLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        materialLayoutInfo.bindingCount = 1;
+        materialLayoutInfo.pBindings = &textureBinding;
+        if (vkCreateDescriptorSetLayout(device, &materialLayoutInfo, nullptr, &materialLayout) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+
         // Create per object
         VkDescriptorSetLayoutBinding modelMatrixBinding{};
         modelMatrixBinding.binding = 0;
@@ -772,7 +795,7 @@ struct Renderer2DImpl {
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        VkDescriptorSetLayout layouts[] = { globalDescriptorSetLayout, mandrill_material.layout, objectDescriptorSetLayout };
+        VkDescriptorSetLayout layouts[] = { globalDescriptorSetLayout, materialLayout, objectDescriptorSetLayout };
         pipelineLayoutInfo.setLayoutCount = 3;
         pipelineLayoutInfo.pSetLayouts = layouts;
         if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
@@ -1204,108 +1227,7 @@ struct Renderer2DImpl {
     }
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-            throw std::runtime_error("failed to begin recording command buffer!");
-        }
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = swapChainExtent;
-
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
-        clearValues[1].depthStencil = { 1.0f, 0 };
-
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)swapChainExtent.width;
-        viewport.height = (float)swapChainExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        VkRect2D scissor{};
-        scissor.offset = { 0, 0 };
-        scissor.extent = swapChainExtent;
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-        // Bind globaldescriptors
-        vkCmdBindDescriptorSets(
-            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-            0, 1, &globalDescriptorSets[currentFrame], 0, nullptr
-        );
-        // Bind material
-        vkCmdBindDescriptorSets(
-            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-            1, 1, &mandrill_material.descriptor,
-            0, nullptr
-        );
-        for (int32_t y = 0; y < 5; ++y) {
-            for (int32_t x = 0; x < 5; ++x) {
-                const uint32_t dynamicOffset = (y * 10 + x) * dynamicAlignment;
-                auto& dst = *reinterpret_cast<DynamicUniformBufferObject*>(reinterpret_cast<uintptr_t>(dynamicUniformBuffersMapped[currentFrame]) + dynamicOffset);
-                dst.model = Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f));
-
-                vkCmdBindDescriptorSets(
-                    commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipelineLayout,
-                    2, 1,
-                    &objectDescriptorSets[currentFrame], 1, &dynamicOffset
-                );
-                vkCmdDraw(commandBuffer, 4, 1, 0, 0);
-            }
-        }
-
-        // Bind other material
-        vkCmdBindDescriptorSets(
-            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-            1, 1, &statue_material.descriptor,
-            0, nullptr
-        );
-        for (int32_t y = 5; y < 10; ++y) {
-            for (int32_t x = 5; x < 10; ++x) {
-                const uint32_t dynamicOffset = (y * 10 + x) * dynamicAlignment;
-                auto& dst = *reinterpret_cast<DynamicUniformBufferObject*>(reinterpret_cast<uintptr_t>(dynamicUniformBuffersMapped[currentFrame]) + dynamicOffset);
-                dst.model = Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f));
-
-                vkCmdBindDescriptorSets(
-                    commandBuffer,
-                    VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    pipelineLayout,
-                    2, 1,
-                    &objectDescriptorSets[currentFrame], 1, &dynamicOffset
-                );
-                vkCmdDraw(commandBuffer, 4, 1, 0, 0);
-            }
-        }
-
-        // flush dynamic uniform buffer update
-        VkMappedMemoryRange flushRange{};
-        flushRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-        flushRange.memory = dynamicUniformBuffersMemory[currentFrame];
-        flushRange.size = dynamicAlignment * 100;
-        vkFlushMappedMemoryRanges(device, 1, &flushRange);
-
-        vkCmdEndRenderPass(commandBuffer);
-
-        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-            throw std::runtime_error("failed to record command buffer!");
-        }
+        
     }
 
     void createSyncObjects() {
@@ -1348,26 +1270,88 @@ struct Renderer2DImpl {
         memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     }
 
-    void drawFrame() {
+    bool beginFrame() {
         vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
-        uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
-
+        VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &currentImageIndex);
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             recreateSwapChain();
-            return;
+            return false;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        updateUniformBuffer(currentFrame);
-
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
-        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
-        recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+        VkCommandBuffer& commandBuffer = commandBuffers[currentFrame];
+        vkResetCommandBuffer(commandBuffer, 0);
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.framebuffer = swapChainFramebuffers[currentImageIndex];
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = swapChainExtent;
+
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+        clearValues[1].depthStencil = { 1.0f, 0 };
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(swapChainExtent.width);
+        viewport.height = static_cast<float>(swapChainExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = swapChainExtent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        updateUniformBuffer(currentFrame);
+        // Bind global descriptors
+        vkCmdBindDescriptorSets(
+            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+            0, 1, &globalDescriptorSets[currentFrame], 0, nullptr
+        );
+        // Bind default material
+        vkCmdBindDescriptorSets(
+            commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+            1, 1, &defaultMaterial.descriptor,
+            0, nullptr
+        );
+
+        return true;
+    }
+
+    void endFrame() {
+        vkCmdEndRenderPass(commandBuffers[currentFrame]);
+        if (vkEndCommandBuffer(commandBuffers[currentFrame]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to record command buffer!");
+        }
+
+        // Flush dynamic uniform buffer update
+        VkMappedMemoryRange flushRange{};
+        flushRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        flushRange.memory = dynamicUniformBuffersMemory[currentFrame];
+        flushRange.size = dynamicAlignment * drawedCount;
+        vkFlushMappedMemoryRanges(device, 1, &flushRange);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1398,11 +1382,9 @@ struct Renderer2DImpl {
         VkSwapchainKHR swapChains[] = { swapChain };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &currentImageIndex;
 
-        presentInfo.pImageIndices = &imageIndex;
-
-        result = vkQueuePresentKHR(presentQueue, &presentInfo);
-
+        VkResult result = vkQueuePresentKHR(presentQueue, &presentInfo);
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
             framebufferResized = false;
             recreateSwapChain();
@@ -1412,6 +1394,7 @@ struct Renderer2DImpl {
         }
 
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+        drawedCount = 0;
     }
 
     VkShaderModule createShaderModule(const std::vector<char>& code) {
@@ -1646,6 +1629,30 @@ bool Renderer2D::shouldWindowClose() const {
     return impl_->shouldWindowClose();
 }
 
+bool Renderer2D::beginFrame() {
+    return impl_->beginFrame();
+}
+
+void Renderer2D::endFrame() {
+    return impl_->endFrame();
+}
+
+void Renderer2D::bindMaterial(const Material& material) {
+    vkCmdBindDescriptorSets(
+        impl_->commandBuffers[impl_->currentFrame],
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        impl_->pipelineLayout,
+        1, 1, &material.descriptor,
+        0, nullptr
+    );
+}
+
+void Renderer2D::setLocalToWorld(const Mat4& xform) {
+    const uint32_t dynamicOffset = impl_->dynamicAlignment * impl_->drawedCount;
+    DynamicUniformBufferObject& dst = *reinterpret_cast<DynamicUniformBufferObject*>(reinterpret_cast<uintptr_t>(impl_->dynamicUniformBuffersMapped[impl_->currentFrame]) + dynamicOffset);
+    dst.model = xform;
+}
+
 void Renderer2D::draw() {
     impl_->draw();
 }
@@ -1658,17 +1665,18 @@ void Renderer2D::terminate() {
     impl_->terminate();
 }
 
-Material Material::create(Renderer2DImpl& impl, const char* filepath) {
+Material Renderer2D::createMaterial(const char* texture_path) {
     Material material{};
-    material.createTextureImage(impl, filepath);
-    material.createTextureImageView(impl);
-    material.createTextureSampler(impl);
-    material.createDescriptorSetLayout(impl);
-    material.createDescriptorSet(impl);
+    createTextureImage(*impl_, texture_path, material.texture);
+    material.texture.view = impl_->createImageView(material.texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+    createTextureSampler(*impl_, material.texture.sampler);
+    createDescriptorSetLayout(*impl_, material.layout);
+    createDescriptorSet(*impl_, material);
+
     return material;
 }
 
-void Material::createTextureImage(Renderer2DImpl& impl, const char* filepath) {
+static void createTextureImage(Renderer2DImpl& impl, const char* filepath, Texture& out) {
     int texWidth, texHeight, texChannels;
     stbi_uc* pixels = stbi_load(filepath, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
@@ -1688,21 +1696,17 @@ void Material::createTextureImage(Renderer2DImpl& impl, const char* filepath) {
 
     stbi_image_free(pixels);
 
-    impl.createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, texture.image, texture.memory);
+    impl.createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, out.image, out.memory);
 
-    impl.transitionImageLayout(texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    impl.copyBufferToImage(stagingBuffer, texture.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-    impl.transitionImageLayout(texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    impl.transitionImageLayout(out.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    impl.copyBufferToImage(stagingBuffer, out.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+    impl.transitionImageLayout(out.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyBuffer(impl.device, stagingBuffer, nullptr);
     vkFreeMemory(impl.device, stagingBufferMemory, nullptr);
 }
 
-void Material::createTextureImageView(Renderer2DImpl& impl) {
-    texture.view = impl.createImageView(texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
-}
-
-void Material::createTextureSampler(Renderer2DImpl& impl) {
+static void createTextureSampler(Renderer2DImpl& impl, VkSampler& out) {
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(impl.physicalDevice, &properties);
 
@@ -1721,37 +1725,22 @@ void Material::createTextureSampler(Renderer2DImpl& impl) {
     samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
     samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-    if (vkCreateSampler(impl.device, &samplerInfo, nullptr, &texture.sampler) != VK_SUCCESS) {
+    if (vkCreateSampler(impl.device, &samplerInfo, nullptr, &out) != VK_SUCCESS) {
         throw std::runtime_error("failed to create texture sampler!");
     }
 }
 
-void Material::createDescriptorSetLayout(Renderer2DImpl& impl) {
-    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-    samplerLayoutBinding.binding = 0;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    std::array<VkDescriptorSetLayoutBinding, 1> bindings = { samplerLayoutBinding };
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    layoutInfo.pBindings = bindings.data();
-
-    if (vkCreateDescriptorSetLayout(impl.device, &layoutInfo, nullptr, &layout) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
+static void createDescriptorSetLayout(Renderer2DImpl& impl, VkDescriptorSetLayout& layout) {
+    layout = impl.materialLayout;
 }
 
-void Material::createDescriptorSet(Renderer2DImpl& impl) {
+static void createDescriptorSet(Renderer2DImpl& impl, Material& out) {
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = impl.descriptorPool;
     allocInfo.descriptorSetCount = 1;
-    allocInfo.pSetLayouts = &layout;
-    VkResult ret = vkAllocateDescriptorSets(impl.device, &allocInfo, &descriptor);
+    allocInfo.pSetLayouts = &out.layout;
+    VkResult ret = vkAllocateDescriptorSets(impl.device, &allocInfo, &out.descriptor);
     if (ret != VK_SUCCESS) {
         std::cerr << ret << std::endl;
         throw std::runtime_error("failed to allocate descriptor sets!");
@@ -1759,12 +1748,12 @@ void Material::createDescriptorSet(Renderer2DImpl& impl) {
 
     VkDescriptorImageInfo imageInfo{};
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = texture.view;
-    imageInfo.sampler = texture.sampler;
+    imageInfo.imageView = out.texture.view;
+    imageInfo.sampler = out.texture.sampler;
 
     std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
     descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites[0].dstSet = descriptor;
+    descriptorWrites[0].dstSet = out.descriptor;
     descriptorWrites[0].dstBinding = 0;
     descriptorWrites[0].dstArrayElement = 0;
     descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
