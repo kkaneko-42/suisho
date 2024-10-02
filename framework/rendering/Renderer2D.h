@@ -25,7 +25,9 @@ public:
     void endFrame();
     void terminate();
 
+    // FIXME
     Material createMaterial(const char* texture_path);
+    Material createMaterial(const void* pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes);
 
 private:
     Renderer2DImpl* impl_;

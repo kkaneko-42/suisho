@@ -25,7 +25,12 @@
 
 using namespace suisho;
 
-static void createTextureImage(Renderer2DImpl& impl, const char* filepath, Texture& out);
+static void createTextureImage(
+    Renderer2DImpl& impl,
+    const void* pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes,
+    Texture& out
+);
+
 static void createTextureSampler(Renderer2DImpl& impl, VkSampler& out);
 static void createDescriptorSetLayout(Renderer2DImpl& impl, VkDescriptorSetLayout& layout);
 static void createDescriptorSet(Renderer2DImpl& impl, Material& out);
@@ -1667,25 +1672,34 @@ void Renderer2D::terminate() {
 }
 
 Material Renderer2D::createMaterial(const char* texture_path) {
+    // Load pixel data
+    int w, h;
+    stbi_uc* pixels = stbi_load(texture_path, &w, &h, nullptr, STBI_rgb_alpha);
+    if (pixels == nullptr) {
+        throw std::runtime_error("Failed to load " + std::string(texture_path));
+    }
+
+    Material material = createMaterial(pixels, w, h, 4); // RGBA 4 bytes
+    stbi_image_free(pixels);
+    return material;
+}
+
+Material Renderer2D::createMaterial(const void* pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes) {
     Material material{};
-    createTextureImage(*impl_, texture_path, material.texture);
+    createTextureImage(*impl_, pixels, width, height, pixel_bytes, material.texture);
     material.texture.view = impl_->createImageView(material.texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
     createTextureSampler(*impl_, material.texture.sampler);
     createDescriptorSetLayout(*impl_, material.layout);
     createDescriptorSet(*impl_, material);
-
     return material;
 }
 
-static void createTextureImage(Renderer2DImpl& impl, const char* filepath, Texture& out) {
-    int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load(filepath, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-    VkDeviceSize imageSize = texWidth * texHeight * 4;
-
-    if (!pixels) {
-        throw std::runtime_error("failed to load texture image!");
-    }
-
+static void createTextureImage(
+    Renderer2DImpl& impl,
+    const void* pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes,
+    Texture& out
+) {
+    const VkDeviceSize imageSize = width * height * pixel_bytes;
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
     impl.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
@@ -1695,12 +1709,10 @@ static void createTextureImage(Renderer2DImpl& impl, const char* filepath, Textu
     memcpy(data, pixels, static_cast<size_t>(imageSize));
     vkUnmapMemory(impl.device, stagingBufferMemory);
 
-    stbi_image_free(pixels);
-
-    impl.createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, out.image, out.memory);
+    impl.createImage(width, height, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, out.image, out.memory);
 
     impl.transitionImageLayout(out.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-    impl.copyBufferToImage(stagingBuffer, out.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+    impl.copyBufferToImage(stagingBuffer, out.image, width, height);
     impl.transitionImageLayout(out.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
     vkDestroyBuffer(impl.device, stagingBuffer, nullptr);
