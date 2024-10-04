@@ -1667,6 +1667,10 @@ void Renderer2D::draw(const Mat4& xform) {
     impl_->draw(xform);
 }
 
+void Renderer2D::drawText(const std::string& s, const Vec2& pos, float rot_degree, const Vec2& scale) {
+    std::cout << s << " is rendered" << std::endl;
+}
+
 bool Renderer2D::initialize() {
     return impl_->initialize();
 }

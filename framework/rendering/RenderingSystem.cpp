@@ -45,6 +45,8 @@ void RenderingSystem::update(Params& params) {
             }
         }
 
+        renderer_.drawText("Hello, World!", Vec2::kZero, 0.0f, Vec2::kZero);
+
         renderer_.endFrame();
     }
 }
