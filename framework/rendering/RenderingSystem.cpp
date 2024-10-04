@@ -25,8 +25,7 @@ void RenderingSystem::update(Params& params) {
         // With default material
         for (int32_t y = 0; y < 5; ++y) {
             for (int32_t x = 0; x < 5; ++x) {
-                renderer_.setLocalToWorld(Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f)));
-                renderer_.draw();
+                renderer_.draw(Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f)));
             }
         }
 
@@ -34,8 +33,7 @@ void RenderingSystem::update(Params& params) {
         renderer_.bindMaterial(mandrill);
         for (int32_t y = 0; y < 5; ++y) {
             for (int32_t x = 5; x < 10; ++x) {
-                renderer_.setLocalToWorld(Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f)));
-                renderer_.draw();
+                renderer_.draw(Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f)));
             }
         }
 
@@ -43,8 +41,7 @@ void RenderingSystem::update(Params& params) {
         renderer_.bindMaterial(statue);
         for (int32_t y = 0; y < 5; ++y) {
             for (int32_t x = 10; x < 15; ++x) {
-                renderer_.setLocalToWorld(Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f)));
-                renderer_.draw();
+                renderer_.draw(Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f)));
             }
         }
 

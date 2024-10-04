@@ -186,7 +186,10 @@ struct Renderer2DImpl {
         return true;
     }
 
-    void draw() {
+    void draw(const Mat4& xform) {
+        // Set xform data
+        setLocalToWorld(xform);
+
         // Bind object descriptor
         const uint32_t dynamicOffset = drawedCount * dynamicAlignment;
         vkCmdBindDescriptorSets(
@@ -305,6 +308,13 @@ struct Renderer2DImpl {
         createCommandBuffers();
         createSyncObjects();
         createDefaultMaterial();
+    }
+
+    void setLocalToWorld(const Mat4& xform) {
+        const uint32_t dynamicOffset = dynamicAlignment * drawedCount;
+        // FIXME: Alignment warning
+        DynamicUniformBufferObject& dst = *reinterpret_cast<DynamicUniformBufferObject*>(reinterpret_cast<uintptr_t>(dynamicUniformBuffersMapped[currentFrame]) + dynamicOffset);
+        dst.model = xform;
     }
 
     void createDefaultMaterial() {
@@ -1653,14 +1663,8 @@ void Renderer2D::bindMaterial(const Material& material) {
     );
 }
 
-void Renderer2D::setLocalToWorld(const Mat4& xform) {
-    const uint32_t dynamicOffset = impl_->dynamicAlignment * impl_->drawedCount;
-    DynamicUniformBufferObject& dst = *reinterpret_cast<DynamicUniformBufferObject*>(reinterpret_cast<uintptr_t>(impl_->dynamicUniformBuffersMapped[impl_->currentFrame]) + dynamicOffset);
-    dst.model = xform;
-}
-
-void Renderer2D::draw() {
-    impl_->draw();
+void Renderer2D::draw(const Mat4& xform) {
+    impl_->draw(xform);
 }
 
 bool Renderer2D::initialize() {

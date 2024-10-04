@@ -20,8 +20,7 @@ public:
     bool shouldWindowClose() const; // FIXME
     bool beginFrame();
     void bindMaterial(const Material& material);
-    void setLocalToWorld(const Mat4& xform);
-    void draw();
+    void draw(const Mat4& xform);
     void endFrame();
     void terminate();
 
