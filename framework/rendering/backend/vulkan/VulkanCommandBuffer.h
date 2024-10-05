@@ -8,6 +8,11 @@ namespace suisho::backend {
 
 class VulkanCommandBuffer {
 public:
+    VulkanCommandBuffer(VkCommandBuffer src = VK_NULL_HANDLE);
+
+    VkCommandBuffer& get() { return cmd_; }
+    const VkCommandBuffer& get() const { return cmd_; }
+
     bool beginRecording();
     bool endRecording();
 

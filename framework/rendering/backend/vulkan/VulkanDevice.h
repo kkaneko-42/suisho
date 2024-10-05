@@ -8,6 +8,8 @@
 
 namespace suisho::backend {
 
+class VulkanCommandBuffer;
+
 class VulkanDevice {
 public:
     bool initialize();
@@ -27,6 +29,9 @@ public:
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     VkShaderModule createShaderModule(const std::vector<char>& code);
+
+    VulkanCommandBuffer createCommandBuffer();
+    void destroyCommandBuffer(VulkanCommandBuffer& buf);
 
     VkFence createFence(bool signaled = false);
     /// @brief フェンスがシグナル状態になるまで待機する

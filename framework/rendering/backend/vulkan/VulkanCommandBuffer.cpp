@@ -3,6 +3,8 @@
 using namespace suisho;
 using namespace suisho::backend;
 
+VulkanCommandBuffer::VulkanCommandBuffer(VkCommandBuffer src) : cmd_(src) {}
+
 bool VulkanCommandBuffer::beginRecording() {
     VkCommandBufferBeginInfo info{};
     info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;

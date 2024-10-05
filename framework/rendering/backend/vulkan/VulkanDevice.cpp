@@ -1,4 +1,5 @@
 #include "rendering/backend/vulkan/VulkanDevice.h"
+#include "rendering/backend/vulkan/VulkanCommandBuffer.h"
 #include <string>
 #include <iostream>
 #include <set>
@@ -60,6 +61,28 @@ void VulkanDevice::initWindow() {
     window = glfwCreateWindow(kWindowWidth, kWindowHeight, "Suisho Engine", nullptr, nullptr);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, onGlfwWindowResized);
+}
+
+VulkanCommandBuffer VulkanDevice::createCommandBuffer() {
+    VkCommandBufferAllocateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    info.commandPool = commandPool;
+    info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    info.commandBufferCount = 1;
+
+    VkCommandBuffer buf;
+    if (vkAllocateCommandBuffers(device, &info, &buf) != VK_SUCCESS) {
+        // TODO
+        throw std::runtime_error("Failed to allocate command buffer");
+    }
+
+    return VulkanCommandBuffer(buf);
+}
+
+void VulkanDevice::destroyCommandBuffer(VulkanCommandBuffer& buf) {
+    VkCommandBuffer& target = buf.get();
+    vkFreeCommandBuffers(device, commandPool, 1, &target);
+    buf.get() = VK_NULL_HANDLE;
 }
 
 VkFence VulkanDevice::createFence(bool signaled) {
