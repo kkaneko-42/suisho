@@ -105,6 +105,10 @@ int VulkanDevice::waitForFence(VkFence fence, uint64_t timeout_nano) {
     return (ret != VK_SUCCESS) - 2 * (ret == VK_TIMEOUT);
 }
 
+void VulkanDevice::resetFence(VkFence fence) {
+    vkResetFences(device, 1, &fence);
+}
+
 void VulkanDevice::destroyFence(VkFence fence) {
     vkDestroyFence(device, fence, nullptr);
 }

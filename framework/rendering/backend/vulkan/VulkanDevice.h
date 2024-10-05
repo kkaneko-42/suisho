@@ -40,6 +40,7 @@ public:
     /// @return 正常終了なら0, タイムアウトなら負の値、それ以外なら正の値
     /// @note 待機時間は、指定された値よりも僅かに長くなる可能性がある
     int waitForFence(VkFence fence, uint64_t timeout_nano);
+    void resetFence(VkFence fence);
     void destroyFence(VkFence fence);
 
 private:

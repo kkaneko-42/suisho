@@ -36,9 +36,13 @@ bool Renderer2D::shouldWindowClose() const {
 }
 
 bool Renderer2D::beginFrame() {
+    device_.waitForFence(frames_[current_frame_].cmd_execution, UINT64_MAX);
+    device_.resetFence(frames_[current_frame_].cmd_execution);
+
+    // vkAcquireNextImageKHR
     return true;
 }
 
 void Renderer2D::endFrame() {
-    device_.waitForFence(frames_[current_frame_].cmd_execution, UINT64_MAX);
+
 }
