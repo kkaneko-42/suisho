@@ -40,6 +40,10 @@ bool Renderer2D::beginFrame() {
     device_.resetFence(frames_[current_frame_].cmd_execution);
 
     // vkAcquireNextImageKHR
+
+    backend::VulkanCommandBuffer& cmd = frames_[current_frame_].cmd_buf;
+    cmd.reset();
+
     return true;
 }
 

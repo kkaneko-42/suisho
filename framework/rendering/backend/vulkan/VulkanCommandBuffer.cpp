@@ -16,6 +16,10 @@ bool VulkanCommandBuffer::endRecording() {
     return (vkEndCommandBuffer(cmd_) == VK_SUCCESS);
 }
 
+bool VulkanCommandBuffer::reset() {
+    return (vkResetCommandBuffer(cmd_, 0) == VK_SUCCESS);
+}
+
 void VulkanCommandBuffer::beginRenderPass(
     VkRenderPass pass, VkFramebuffer framebuffer,
     std::vector<VkClearValue> clear_info,

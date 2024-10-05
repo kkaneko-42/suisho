@@ -15,6 +15,7 @@ public:
 
     bool beginRecording();
     bool endRecording();
+    bool reset();
 
     void beginRenderPass(
         VkRenderPass pass, VkFramebuffer framebuffer,
