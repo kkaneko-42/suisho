@@ -2,7 +2,7 @@
 
 using namespace suisho;
 
-Renderer2D::Renderer2D() {
+Renderer2D::Renderer2D() : frames_(), current_frame_(0) {
 
 }
 
