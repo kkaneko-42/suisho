@@ -29,7 +29,6 @@ public:
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 
-    [[nodiscard]]
     VulkanImage createImage(
         uint32_t width, uint32_t height, const void* data,
         VkFormat format, VkImageTiling tiling,
@@ -42,12 +41,17 @@ public:
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+
     VkShaderModule createShaderModule(const std::vector<char>& code);
+    void destroyShaderModule(VkShaderModule mod);
 
     // FIXME: Fixed function
     // 0: presented image, 1: depth. Subpass is 0 only
     VkRenderPass createRenderPass();
     void destroyRenderPass(VkRenderPass pass);
+
+    VkPipeline createGraphicsPipeline(VkShaderModule vert, VkShaderModule frag, VkRenderPass pass, VkPipelineLayout& layout);
+    void destroyPipeline(VkPipeline pipeline, VkPipelineLayout layout);
 
     // CONCERN: Assert attachment size is equal to framebuffer size
     VkFramebuffer createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass);

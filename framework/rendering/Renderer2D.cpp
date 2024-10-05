@@ -1,6 +1,25 @@
 ﻿#include "rendering/Renderer2D.h"
+#include <fstream>
 
 using namespace suisho;
+
+static std::vector<char> readBinary(const std::string& filepath) {
+    std::ifstream file(filepath, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("failed to open file!");
+    }
+
+    size_t fileSize = (size_t)file.tellg();
+    std::vector<char> buffer(fileSize);
+
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+
+    file.close();
+
+    return buffer;
+}
 
 Renderer2D::Renderer2D() : frames_(), current_frame_(0) {
 
@@ -17,6 +36,11 @@ bool Renderer2D::initialize() {
     }
 
     render_pass_ = device_.createRenderPass();
+    VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/triangle.vert.spv"));
+    VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/triangle.frag.spv"));
+    pipeline_ = device_.createGraphicsPipeline(vert, frag, render_pass_, pipeline_layout_);
+    device_.destroyShaderModule(vert);
+    device_.destroyShaderModule(frag);
 
     const auto& swapchain_images = device_.getSwapchainImages();
     const VkFormat depth_format = device_.findSupportedFormat(
@@ -50,6 +74,7 @@ void Renderer2D::terminate() {
     }
 
     device_.destroyImage(depth_buffer_);
+    device_.destroyPipeline(pipeline_, pipeline_layout_);
     device_.destroyRenderPass(render_pass_);
 
     device_.terminate();

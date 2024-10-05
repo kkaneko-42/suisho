@@ -47,6 +47,8 @@ private:
     backend::VulkanDevice device_;
 
     VkRenderPass render_pass_;
+    VkPipelineLayout pipeline_layout_;
+    VkPipeline pipeline_;
     backend::VulkanImage depth_buffer_;
 
     std::array<Frame, kMaxFramesOverlapped> frames_;
