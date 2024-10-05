@@ -2,5 +2,5 @@
 set(SUISHO_RENDERING_SRCS
 	rendering/Renderer2D.cpp
 	rendering/RenderingSystem.cpp
-	rendering/backend/VulkanDevice.cpp
+	rendering/backend/vulkan/VulkanDevice.cpp
 )

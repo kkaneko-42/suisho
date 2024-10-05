@@ -2,7 +2,7 @@
 #define SUISHO_RENDERING_RENDERER_2D_H_
 
 #include <string>
-#include "backend/VulkanDevice.h"
+#include "backend/vulkan/VulkanDevice.h"
 #include "rendering/Material.h"
 #include "math/Mat4.h"
 #include "math/Vec2.h"
