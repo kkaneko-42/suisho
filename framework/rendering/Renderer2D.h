@@ -41,7 +41,6 @@ private:
     struct Frame {
         VkFence cmd_execution; // FIXME
         backend::VulkanCommandBuffer cmd_buf;
-        VkFramebuffer framebuffer;
     };
 
     backend::VulkanDevice device_;
@@ -49,10 +48,13 @@ private:
     VkRenderPass render_pass_;
     VkPipelineLayout pipeline_layout_;
     VkPipeline pipeline_;
+
     backend::VulkanImage depth_buffer_;
+    std::vector<VkFramebuffer> framebuffers_;
 
     std::array<Frame, kMaxFramesOverlapped> frames_;
     size_t current_frame_;
+    uint32_t next_image_index_;
 };
 
 } // namespace suisho

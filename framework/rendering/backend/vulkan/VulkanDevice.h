@@ -60,6 +60,12 @@ public:
     VulkanCommandBuffer createCommandBuffer();
     void destroyCommandBuffer(VulkanCommandBuffer& buf);
 
+    bool submit(const VulkanCommandBuffer& cmds, VkFence sync);
+    bool present(uint32_t image_index);
+
+    uint32_t acquireNextImage();
+    void waitIdle();
+
     VkFence createFence(bool signaled = false);
     /// @brief フェンスがシグナル状態になるまで待機する
     /// @param fence 待機するフェンス
@@ -106,12 +112,8 @@ private:
 
     VkDescriptorPool descriptorPool;
 
-    std::vector<VkSemaphore> presentationSync;
-    std::vector<VkSemaphore> renderingSync;
-    std::vector<VkFence> CmdExecutionSync;
-
-    uint32_t currentFrame = 0;
-    uint32_t currentImageIndex = 0;
+    VkSemaphore presentationSync;
+    VkSemaphore renderingSync;
 
     bool framebufferResized = false;
     static void onGlfwWindowResized(GLFWwindow* window, int width, int height);

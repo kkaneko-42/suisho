@@ -42,6 +42,11 @@ bool Renderer2D::initialize() {
     device_.destroyShaderModule(vert);
     device_.destroyShaderModule(frag);
 
+    for (size_t i = 0; i < kMaxFramesOverlapped; ++i) {
+        frames_[i].cmd_execution = device_.createFence(true);
+        frames_[i].cmd_buf = device_.createCommandBuffer();
+    }
+
     const auto& swapchain_images = device_.getSwapchainImages();
     const VkFormat depth_format = device_.findSupportedFormat(
         { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
@@ -55,22 +60,25 @@ bool Renderer2D::initialize() {
         VK_IMAGE_ASPECT_DEPTH_BIT
     );
 
-    for (size_t i = 0; i < kMaxFramesOverlapped; ++i) {
-        frames_[i].cmd_execution = device_.createFence(true);
-        frames_[i].cmd_buf = device_.createCommandBuffer();
-
+    framebuffers_.resize(swapchain_images.size());
+    for (size_t i = 0; i < swapchain_images.size(); ++i) {
         const auto attachments = { swapchain_images[i], depth_buffer_ };
-        frames_[i].framebuffer = device_.createFramebuffer(attachments, render_pass_);
+        framebuffers_[i] = device_.createFramebuffer(attachments, render_pass_);
     }
 
     return true;
 }
 
 void Renderer2D::terminate() {
+    device_.waitIdle();
+
+    for (auto& fb : framebuffers_) {
+        device_.destroyFramebuffer(fb);
+    }
+
     for (size_t i = 0; i < kMaxFramesOverlapped; ++i) {
         device_.destroyFence(frames_[i].cmd_execution);
         device_.destroyCommandBuffer(frames_[i].cmd_buf);
-        device_.destroyFramebuffer(frames_[i].framebuffer);
     }
 
     device_.destroyImage(depth_buffer_);
@@ -86,9 +94,9 @@ bool Renderer2D::shouldWindowClose() const {
 
 bool Renderer2D::beginFrame() {
     device_.waitForFence(frames_[current_frame_].cmd_execution, UINT64_MAX);
-    // device_.resetFence(frames_[current_frame_].cmd_execution);
+    device_.resetFence(frames_[current_frame_].cmd_execution);
 
-    // vkAcquireNextImageKHR
+    next_image_index_ = device_.acquireNextImage();
 
     backend::VulkanCommandBuffer& cmd = frames_[current_frame_].cmd_buf;
     cmd.reset();
@@ -100,9 +108,11 @@ bool Renderer2D::beginFrame() {
     clear_values[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
     clear_values[1].depthStencil = { 1.0f, 0 };
     cmd.beginRenderPass(
-        render_pass_, frames_[current_frame_].framebuffer,
+        render_pass_, framebuffers_[next_image_index_],
         clear_values, swapchain_extent
     );
+
+    cmd.bindGraphicsPipeline(pipeline_);
 
     VkViewport viewport{};
     viewport.x = viewport.y = 0.0f;
@@ -117,6 +127,8 @@ bool Renderer2D::beginFrame() {
     scissor.extent = swapchain_extent;
     cmd.setScissor(scissor);
 
+    cmd.draw(3);
+
     return true;
 }
 
@@ -125,4 +137,8 @@ void Renderer2D::endFrame() {
     cmd.endRenderPass();
 
     cmd.endRecording();
+    device_.submit(cmd, frames_[current_frame_].cmd_execution);
+    device_.present(next_image_index_);
+
+    current_frame_ = (current_frame_ + 1) % kMaxFramesOverlapped;
 }

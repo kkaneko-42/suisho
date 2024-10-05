@@ -31,6 +31,9 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 }
 
 void VulkanDevice::terminate() {
+    vkDestroySemaphore(device, presentationSync, nullptr);
+    vkDestroySemaphore(device, renderingSync, nullptr);
+
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyCommandPool(device, commandPool, nullptr);
 
@@ -326,6 +329,62 @@ void VulkanDevice::destroyCommandBuffer(VulkanCommandBuffer& buf) {
     VkCommandBuffer& target = buf.get();
     vkFreeCommandBuffers(device, commandPool, 1, &target);
     buf.get() = VK_NULL_HANDLE;
+}
+
+bool VulkanDevice::submit(const VulkanCommandBuffer& cmds, VkFence sync) {
+    VkSubmitInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    info.waitSemaphoreCount = 1;
+    info.pWaitSemaphores = &presentationSync;
+    info.pWaitDstStageMask = waitStages;
+    info.commandBufferCount = 1;
+    info.pCommandBuffers = &cmds.get();
+    info.signalSemaphoreCount = 1;
+    info.pSignalSemaphores = &renderingSync;
+
+    if (vkQueueSubmit(graphicsQueue, 1, &info, sync) != VK_SUCCESS) {
+        throw std::runtime_error("failed to submit draw command buffer!");
+    }
+
+    return true;
+}
+
+bool VulkanDevice::present(uint32_t image_index) {
+    VkPresentInfoKHR info{};
+    info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+    info.waitSemaphoreCount = 1;
+    info.pWaitSemaphores = &renderingSync;
+
+    VkSwapchainKHR swapChains[] = { swapChain };
+    info.swapchainCount = 1;
+    info.pSwapchains = swapChains;
+    info.pImageIndices = &image_index;
+
+    VkResult result = vkQueuePresentKHR(presentQueue, &info);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+        framebufferResized = false;
+        recreateSwapChain();
+    }
+    else if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image!");
+    }
+
+    return true;
+}
+
+uint32_t VulkanDevice::acquireNextImage() {
+    uint32_t result = 0;
+    vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, presentationSync, VK_NULL_HANDLE, &result);
+    // TODO: Error checking
+    
+    return result;
+}
+
+void VulkanDevice::waitIdle() {
+    vkDeviceWaitIdle(device);
 }
 
 VkFence VulkanDevice::createFence(bool signaled) {
@@ -864,24 +923,13 @@ uint32_t VulkanDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags
 }
 
 void VulkanDevice::createSyncObjects() {
-    //presentFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    //renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    //inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
-    //VkSemaphoreCreateInfo semaphoreInfo{};
-    //semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-    //VkFenceCreateInfo fenceInfo{};
-    //fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    //fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-    //for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    //    if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &presentFinishedSemaphores[i]) != VK_SUCCESS ||
-    //        vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-    //        vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
-    //        throw std::runtime_error("failed to create synchronization objects for a frame!");
-    //    }
-    //}
+    VkSemaphoreCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    if (vkCreateSemaphore(device, &info, nullptr, &presentationSync) != VK_SUCCESS ||
+        vkCreateSemaphore(device, &info, nullptr, &renderingSync) != VK_SUCCESS
+    ) {
+        throw std::runtime_error("Failed to create sync objects");
+    }
 }
 
 VkShaderModule VulkanDevice::createShaderModule(const std::vector<char>& code) {
