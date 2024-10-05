@@ -12,6 +12,7 @@ class VulkanDevice {
 public:
     bool initialize();
     void terminate();
+    bool isWindowClosed() const;
 
     template <class F>
     void subscribeWindowResize(F&& f) {

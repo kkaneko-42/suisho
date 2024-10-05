@@ -15,6 +15,14 @@ RenderingSystem::~RenderingSystem() {
 }
 
 void RenderingSystem::update(Params& params) {
+    while (true) {
+        if (renderer_.shouldWindowClose()) {
+            renderer_.terminate();
+            exit(0);
+        }
+    }
+
+    /*
     static Material mandrill = renderer_.createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png");
     static Material statue = renderer_.createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg");
     if (renderer_.shouldWindowClose()) {
@@ -49,4 +57,5 @@ void RenderingSystem::update(Params& params) {
 
         renderer_.endFrame();
     }
+    */
 }

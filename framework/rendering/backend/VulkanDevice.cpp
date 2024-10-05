@@ -12,20 +12,13 @@ constexpr uint32_t kWindowWidth = 800;
 constexpr uint32_t kWindowHeight = 600;
 
 bool VulkanDevice::initialize() {
-    // Gather glfw extentions
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions;
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-    // Add debug extentions
     if (isDebugged) {
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
     }
+    enabledDeviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
     initWindow();
     initVulkan();
-
     return true;
 }
 
@@ -37,6 +30,8 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 }
 
 void VulkanDevice::terminate() {
+    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    vkDestroyCommandPool(device, commandPool, nullptr);
     vkDestroySwapchainKHR(device, swapChain, nullptr);
     vkDestroyDevice(device, nullptr);
 
@@ -50,6 +45,11 @@ void VulkanDevice::terminate() {
     glfwDestroyWindow(window);
 
     glfwTerminate();
+}
+
+bool VulkanDevice::isWindowClosed() const {
+    glfwPollEvents(); // FIXME
+    return glfwWindowShouldClose(window);
 }
 
 void VulkanDevice::initWindow() {
