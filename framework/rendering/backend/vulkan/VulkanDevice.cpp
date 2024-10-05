@@ -1,5 +1,6 @@
 #include "rendering/backend/vulkan/VulkanDevice.h"
 #include "rendering/backend/vulkan/VulkanCommandBuffer.h"
+#include "rendering/backend/vulkan/VulkanImage.h"
 #include <string>
 #include <iostream>
 #include <set>
@@ -130,6 +131,34 @@ VkRenderPass VulkanDevice::createRenderPass() {
 
 void VulkanDevice::destroyRenderPass(VkRenderPass pass) {
     vkDestroyRenderPass(device, pass, nullptr);
+}
+
+VkFramebuffer VulkanDevice::createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass) {
+    std::vector<VkImageView> views(attachments.size());
+    for (size_t i = 0; i < attachments.size(); ++i) {
+        views[i] = attachments[i].view;
+    }
+
+    VkFramebufferCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    info.renderPass = pass;
+    info.attachmentCount = static_cast<uint32_t>(attachments.size());
+    info.pAttachments = views.data();
+    // FIXME: Assert all attachments have a same extent.
+    info.width = attachments[0].extent.width;
+    info.height = attachments[0].extent.height;
+    info.layers = 1;
+
+    VkFramebuffer fb;
+    if (vkCreateFramebuffer(device, &info, nullptr, &fb) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create framebuffer");
+    }
+
+    return fb;
+}
+
+void VulkanDevice::destroyFramebuffer(VkFramebuffer fb) {
+    vkDestroyFramebuffer(device, fb, nullptr);
 }
 
 VulkanCommandBuffer VulkanDevice::createCommandBuffer() {

@@ -40,6 +40,7 @@ private:
     struct Frame {
         VkFence cmd_execution; // FIXME
         backend::VulkanCommandBuffer cmd_buf;
+        VkFramebuffer framebuffer;
     };
 
     backend::VulkanDevice device_;

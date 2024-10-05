@@ -9,6 +9,7 @@
 namespace suisho::backend {
 
 class VulkanCommandBuffer;
+struct VulkanImage;
 
 class VulkanDevice {
 public:
@@ -34,6 +35,10 @@ public:
     // 0: presented image, 1: depth. Subpass is 0 only
     VkRenderPass createRenderPass();
     void destroyRenderPass(VkRenderPass pass);
+
+    // CONCERN: Assert attachment size is equal to framebuffer size
+    VkFramebuffer createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass);
+    void destroyFramebuffer(VkFramebuffer fb);
 
     VulkanCommandBuffer createCommandBuffer();
     void destroyCommandBuffer(VulkanCommandBuffer& buf);
