@@ -5,6 +5,7 @@
 #include <array>
 #include "backend/vulkan/VulkanDevice.h"
 #include "backend/vulkan/VulkanCommandBuffer.h"
+#include "backend/vulkan/VulkanImage.h"
 #include "rendering/Material.h"
 #include "math/Mat4.h"
 #include "math/Vec2.h"
@@ -46,6 +47,7 @@ private:
     backend::VulkanDevice device_;
 
     VkRenderPass render_pass_;
+    backend::VulkanImage depth_buffer_;
 
     std::array<Frame, kMaxFramesOverlapped> frames_;
     size_t current_frame_;

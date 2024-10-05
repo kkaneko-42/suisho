@@ -64,6 +64,34 @@ void VulkanDevice::initWindow() {
     glfwSetFramebufferSizeCallback(window, onGlfwWindowResized);
 }
 
+VulkanImage VulkanDevice::createImage(
+    uint32_t width, uint32_t height, const void* data,
+    VkFormat format, VkImageTiling tiling,
+    VkImageUsageFlags usage, VkMemoryPropertyFlags mem_props,
+    VkImageAspectFlags view_aspect
+) {
+    VulkanImage result{};
+    createImage(width, height, format, tiling, usage, mem_props, result.image, result.memory);
+
+    if (data != nullptr) {
+        // TODO: Set data
+        throw std::logic_error("VulkanDevice::createImage() with non-null data is not supported");
+    }
+
+    result.view = createImageView(result.image, format, view_aspect);
+    return result;
+}
+
+void VulkanDevice::destroyImage(VulkanImage& image) {
+    vkDestroyImageView(device, image.view, nullptr);
+    vkFreeMemory(device, image.memory, nullptr);
+    vkDestroyImage(device, image.image, nullptr);
+
+    image.view = VK_NULL_HANDLE;
+    image.memory = VK_NULL_HANDLE;
+    image.image = VK_NULL_HANDLE;
+}
+
 VkRenderPass VulkanDevice::createRenderPass() {
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = swapChainImages[0].format; // Assert swapchain format is not changed
