@@ -2,7 +2,9 @@
 #define SUISHO_RENDERING_RENDERER_2D_H_
 
 #include <string>
+#include <array>
 #include "backend/vulkan/VulkanDevice.h"
+#include "backend/vulkan/VulkanCommandBuffer.h"
 #include "rendering/Material.h"
 #include "math/Mat4.h"
 #include "math/Vec2.h"
@@ -13,6 +15,8 @@ struct Renderer2DImpl;
 
 class Renderer2D {
 public:
+    static constexpr size_t kMaxFramesOverlapped = 2;
+
     Renderer2D();
     ~Renderer2D();
 
@@ -33,7 +37,14 @@ public:
     Material createMaterial(const void* pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes);
 
 private:
+    struct Frame {
+        VkFence cmd_execution; // FIXME
+        backend::VulkanCommandBuffer cmd_buf;
+    };
+
     backend::VulkanDevice device_;
+    std::array<Frame, kMaxFramesOverlapped> frames_;
+    size_t current_frame_;
 };
 
 } // namespace suisho

@@ -62,6 +62,30 @@ void VulkanDevice::initWindow() {
     glfwSetFramebufferSizeCallback(window, onGlfwWindowResized);
 }
 
+VkFence VulkanDevice::createFence(bool signaled) {
+    VkFenceCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    if (signaled) {
+        info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    }
+
+    VkFence fence;
+    if (vkCreateFence(device, &info, nullptr, &fence) != VK_SUCCESS) {
+        return VK_NULL_HANDLE;
+    }
+
+    return fence;
+}
+
+int VulkanDevice::waitForFence(VkFence fence, uint64_t timeout_nano) {
+    VkResult ret = vkWaitForFences(device, 1, &fence, VK_TRUE, timeout_nano);
+    return (ret != VK_SUCCESS) - 2 * (ret == VK_TIMEOUT);
+}
+
+void VulkanDevice::destroyFence(VkFence fence) {
+    vkDestroyFence(device, fence, nullptr);
+}
+
 void VulkanDevice::onGlfwWindowResized(GLFWwindow* window, int width, int height) {
     auto device = reinterpret_cast<VulkanDevice*>(glfwGetWindowUserPointer(window));
     for (const auto& callback : device->onWindowResize) {

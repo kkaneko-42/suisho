@@ -1,4 +1,4 @@
-#ifndef SUISHO_RENDERING_BACKEND_VULKAN_DEVICE_H_
+﻿#ifndef SUISHO_RENDERING_BACKEND_VULKAN_DEVICE_H_
 #define SUISHO_RENDERING_BACKEND_VULKAN_DEVICE_H_
 
 #include <vulkan/vulkan.h>
@@ -27,6 +27,15 @@ public:
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     VkShaderModule createShaderModule(const std::vector<char>& code);
+
+    VkFence createFence(bool signaled = false);
+    /// @brief フェンスがシグナル状態になるまで待機する
+    /// @param fence 待機するフェンス
+    /// @param timeout_nano 待機の最大時間[ナノ秒]。最大値で永久に待機する
+    /// @return 正常終了なら0, タイムアウトなら負の値、それ以外なら正の値
+    /// @note 待機時間は、指定された値よりも僅かに長くなる可能性がある
+    int waitForFence(VkFence fence, uint64_t timeout_nano);
+    void destroyFence(VkFence fence);
 
 private:
     struct SwapChainSupportDetails {
