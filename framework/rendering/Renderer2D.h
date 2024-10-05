@@ -43,6 +43,9 @@ private:
     };
 
     backend::VulkanDevice device_;
+
+    VkRenderPass render_pass_;
+
     std::array<Frame, kMaxFramesOverlapped> frames_;
     size_t current_frame_;
 };

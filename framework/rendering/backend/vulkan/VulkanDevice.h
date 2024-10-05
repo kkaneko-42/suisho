@@ -30,6 +30,11 @@ public:
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     VkShaderModule createShaderModule(const std::vector<char>& code);
 
+    // FIXME: Fixed function
+    // 0: presented image, 1: depth. Subpass is 0 only
+    VkRenderPass createRenderPass();
+    void destroyRenderPass(VkRenderPass pass);
+
     VulkanCommandBuffer createCommandBuffer();
     void destroyCommandBuffer(VulkanCommandBuffer& buf);
 

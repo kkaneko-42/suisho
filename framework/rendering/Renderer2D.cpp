@@ -16,6 +16,8 @@ bool Renderer2D::initialize() {
         return false;
     }
 
+    render_pass_ = device_.createRenderPass();
+
     for (size_t i = 0; i < kMaxFramesOverlapped; ++i) {
         frames_[i].cmd_execution = device_.createFence(true);
         frames_[i].cmd_buf = device_.createCommandBuffer();
@@ -27,6 +29,8 @@ void Renderer2D::terminate() {
         device_.destroyFence(frames_[i].cmd_execution);
         device_.destroyCommandBuffer(frames_[i].cmd_buf);
     }
+
+    device_.destroyRenderPass(render_pass_);
 
     device_.terminate();
 }
