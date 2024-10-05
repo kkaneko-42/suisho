@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <functional>
+#include "rendering/backend/vulkan/VulkanImage.h"
 
 namespace suisho::backend {
 
@@ -83,9 +84,7 @@ private:
     VkQueue presentQueue;
 
     VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
+    std::vector<VulkanImage> swapChainImages;
 
     VkCommandPool commandPool;
 
@@ -110,6 +109,7 @@ private:
     void pickPhysicalDevice();
     void createLogicalDevice();
     void createSwapChain();
+    void cleanupSwapChain();
     void createCommandPool();
     void createDescriptorPool(); // FIXME: Fixed descriptor counts
     void createSyncObjects();

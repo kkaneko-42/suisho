@@ -9,6 +9,7 @@ namespace suisho::backend {
         VkDeviceMemory memory;
         VkImageView view;
 
+        VkFormat format;
         VkExtent2D extent;
     };
 }

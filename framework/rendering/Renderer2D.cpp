@@ -22,6 +22,8 @@ bool Renderer2D::initialize() {
         frames_[i].cmd_execution = device_.createFence(true);
         frames_[i].cmd_buf = device_.createCommandBuffer();
     }
+
+    return true;
 }
 
 void Renderer2D::terminate() {

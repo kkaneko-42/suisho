@@ -1,6 +1,5 @@
 #include "rendering/backend/vulkan/VulkanDevice.h"
 #include "rendering/backend/vulkan/VulkanCommandBuffer.h"
-#include "rendering/backend/vulkan/VulkanImage.h"
 #include <string>
 #include <iostream>
 #include <set>
@@ -34,7 +33,8 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 void VulkanDevice::terminate() {
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyCommandPool(device, commandPool, nullptr);
-    vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+    cleanupSwapChain();
     vkDestroyDevice(device, nullptr);
 
     if (isDebugged) {
@@ -66,7 +66,7 @@ void VulkanDevice::initWindow() {
 
 VkRenderPass VulkanDevice::createRenderPass() {
     VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = swapChainImageFormat;
+    colorAttachment.format = swapChainImages[0].format; // Assert swapchain format is not changed
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -437,11 +437,26 @@ void VulkanDevice::createSwapChain() {
     }
 
     vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
-    swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+    std::vector<VkImage> images_dst(imageCount);
+    vkGetSwapchainImagesKHR(device, swapChain, &imageCount, images_dst.data());
 
-    swapChainImageFormat = surfaceFormat.format;
-    swapChainExtent = extent;
+    swapChainImages.resize(imageCount);
+    for (uint32_t i = 0; i < imageCount; ++i) {
+        VulkanImage& img = swapChainImages[i];
+        img.image = images_dst[i];
+        img.memory = VK_NULL_HANDLE;
+        img.format = surfaceFormat.format;
+        img.view = createImageView(images_dst[i], img.format, VK_IMAGE_ASPECT_COLOR_BIT);
+        img.extent = extent;
+    }
+}
+
+void VulkanDevice::cleanupSwapChain() {
+    for (auto& image : swapChainImages) {
+        vkDestroyImageView(device, image.view, nullptr);
+    }
+
+    vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
 
 void VulkanDevice::createCommandPool() {
