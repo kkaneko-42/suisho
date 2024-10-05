@@ -318,25 +318,12 @@ struct Renderer2DImpl {
     }
 
     void createDefaultMaterial() {
-        const std::pair<uint32_t, uint32_t> extent = { 8, 8 };
-        const VkDeviceSize imageSize = extent.first * extent.second * 4;
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        constexpr std::pair<uint32_t, uint32_t> kTextureExtent = { 8, 8 };
+        constexpr uint32_t kTextureSize = kTextureExtent.first * kTextureExtent.second * 4; // RGBA
+        unsigned char texture_data[kTextureSize];
+        std::memset(texture_data, 0xff, kTextureSize);
 
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
-        memset(data, 0xff, imageSize);
-        vkUnmapMemory(device, stagingBufferMemory);
-
-        createImage(extent.first, extent.second, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, defaultMaterial.texture.image, defaultMaterial.texture.memory);
-        transitionImageLayout(defaultMaterial.texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(stagingBuffer, defaultMaterial.texture.image, static_cast<uint32_t>(extent.first), static_cast<uint32_t>(extent.second));
-        transitionImageLayout(defaultMaterial.texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
-
+        createTextureImage(*this, texture_data, kTextureExtent.first, kTextureExtent.second, 4, defaultMaterial.texture);
         defaultMaterial.texture.view = createImageView(defaultMaterial.texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
         createTextureSampler(*this, defaultMaterial.texture.sampler);
         defaultMaterial.layout = materialLayout;
