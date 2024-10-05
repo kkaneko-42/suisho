@@ -20,6 +20,10 @@ void RenderingSystem::update(Params& params) {
             renderer_.terminate();
             exit(0);
         }
+
+        if (renderer_.beginFrame()) {
+            renderer_.endFrame();
+        }
     }
 
     /*

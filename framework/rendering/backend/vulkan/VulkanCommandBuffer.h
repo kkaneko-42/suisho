@@ -20,7 +20,7 @@ public:
     void beginRenderPass(
         VkRenderPass pass, VkFramebuffer framebuffer,
         std::vector<VkClearValue> clear_info,
-        const VkRect2D& area // FIXME: With (area_min, area_max)
+        const VkExtent2D& area // FIXME: With (area_min, area_max)
     );
     void endRenderPass();
 

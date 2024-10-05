@@ -61,16 +61,43 @@ bool Renderer2D::shouldWindowClose() const {
 
 bool Renderer2D::beginFrame() {
     device_.waitForFence(frames_[current_frame_].cmd_execution, UINT64_MAX);
-    device_.resetFence(frames_[current_frame_].cmd_execution);
+    // device_.resetFence(frames_[current_frame_].cmd_execution);
 
     // vkAcquireNextImageKHR
 
     backend::VulkanCommandBuffer& cmd = frames_[current_frame_].cmd_buf;
     cmd.reset();
 
+    cmd.beginRecording();
+
+    const VkExtent2D swapchain_extent = device_.getSwapchainImages()[0].extent;
+    std::vector<VkClearValue> clear_values(2);
+    clear_values[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+    clear_values[1].depthStencil = { 1.0f, 0 };
+    cmd.beginRenderPass(
+        render_pass_, frames_[current_frame_].framebuffer,
+        clear_values, swapchain_extent
+    );
+
+    VkViewport viewport{};
+    viewport.x = viewport.y = 0.0f;
+    viewport.width = static_cast<float>(swapchain_extent.width);
+    viewport.height = static_cast<float>(swapchain_extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    cmd.setViewport(viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = { 0, 0 };
+    scissor.extent = swapchain_extent;
+    cmd.setScissor(scissor);
+
     return true;
 }
 
 void Renderer2D::endFrame() {
+    backend::VulkanCommandBuffer& cmd = frames_[current_frame_].cmd_buf;
+    cmd.endRenderPass();
 
+    cmd.endRecording();
 }

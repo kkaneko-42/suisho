@@ -23,14 +23,14 @@ bool VulkanCommandBuffer::reset() {
 void VulkanCommandBuffer::beginRenderPass(
     VkRenderPass pass, VkFramebuffer framebuffer,
     std::vector<VkClearValue> clear_info,
-    const VkRect2D& area // FIXME: With (area_min, area_max)
+    const VkExtent2D& area // FIXME: With (area_min, area_max)
 ) {
     VkRenderPassBeginInfo info{};
     info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     info.renderPass = pass;
     info.framebuffer = framebuffer;
-    info.renderArea.offset = area.offset;
-    info.renderArea.extent = area.extent;
+    info.renderArea.offset = { 0, 0 };
+    info.renderArea.extent = area;
     info.clearValueCount = static_cast<uint32_t>(clear_info.size());
     info.pClearValues = clear_info.data();
 
