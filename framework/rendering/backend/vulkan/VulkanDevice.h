@@ -17,6 +17,7 @@ public:
     bool initialize();
     void terminate();
     bool isWindowClosed() const;
+    bool isWindowMinimized() const;
 
     template <class F>
     void subscribeWindowResize(F&& f) {

@@ -20,6 +20,21 @@ bool VulkanDevice::initialize() {
 
     initWindow();
     initVulkan();
+
+    subscribeWindowResize([this](uint32_t w, uint32_t h) {
+        if (w == 0 || h == 0) {
+            return;
+        }
+
+        vkDeviceWaitIdle(device);
+        for (auto& img : swapChainImages) {
+            vkDestroyImageView(device, img.view, nullptr);
+        }
+        vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+        createSwapChain();
+    });
+
     return true;
 }
 
@@ -55,6 +70,12 @@ void VulkanDevice::terminate() {
 bool VulkanDevice::isWindowClosed() const {
     glfwPollEvents(); // FIXME
     return glfwWindowShouldClose(window);
+}
+
+bool VulkanDevice::isWindowMinimized() const {
+    int w, h;
+    glfwGetFramebufferSize(window, &w, &h);
+    return (w == 0) || (h == 0);
 }
 
 void VulkanDevice::initWindow() {
@@ -376,11 +397,12 @@ bool VulkanDevice::present(uint32_t image_index) {
 }
 
 uint32_t VulkanDevice::acquireNextImage() {
-    uint32_t result = 0;
-    vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, presentationSync, VK_NULL_HANDLE, &result);
-    // TODO: Error checking
-    
-    return result;
+    uint32_t idx = 0;
+    if (vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, presentationSync, VK_NULL_HANDLE, &idx) != VK_SUCCESS) {
+        return UINT32_MAX;
+    }
+
+    return idx;
 }
 
 void VulkanDevice::waitIdle() {
