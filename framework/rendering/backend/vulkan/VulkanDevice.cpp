@@ -302,6 +302,36 @@ void VulkanDevice::destroyPipeline(VkPipeline pipeline, VkPipelineLayout layout)
     vkDestroyPipelineLayout(device, layout, nullptr);
 }
 
+VkDescriptorSetLayout VulkanDevice::createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& layout_info) {
+    std::vector<VkDescriptorSetLayoutBinding> bindings;
+    bindings.reserve(layout_info.size());
+    for (auto& [idx, type] : layout_info) {
+        VkDescriptorSetLayoutBinding binding{};
+        binding.binding = idx;
+        binding.descriptorType = type;
+        binding.descriptorCount = 1;
+        binding.pImmutableSamplers = nullptr;
+        binding.stageFlags = VK_SHADER_STAGE_ALL;
+        bindings.push_back(binding);
+    }
+
+    VkDescriptorSetLayoutCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    info.bindingCount = static_cast<uint32_t>(bindings.size());
+    info.pBindings = bindings.data();
+
+    VkDescriptorSetLayout layout;
+    if (vkCreateDescriptorSetLayout(device, &info, nullptr, &layout) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create descriptor set layout");
+    }
+
+    return layout;
+}
+
+void VulkanDevice::destroyBindingLayout(VkDescriptorSetLayout layout) {
+    vkDestroyDescriptorSetLayout(device, layout, nullptr);
+}
+
 VkFramebuffer VulkanDevice::createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass) {
     std::vector<VkImageView> views(attachments.size());
     for (size_t i = 0; i < attachments.size(); ++i) {

@@ -54,6 +54,9 @@ public:
     VkPipeline createGraphicsPipeline(VkShaderModule vert, VkShaderModule frag, VkRenderPass pass, VkPipelineLayout& layout);
     void destroyPipeline(VkPipeline pipeline, VkPipelineLayout layout);
 
+    VkDescriptorSetLayout createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& layout_info);
+    void destroyBindingLayout(VkDescriptorSetLayout layout);
+
     // CONCERN: Assert attachment size is equal to framebuffer size
     VkFramebuffer createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass);
     void destroyFramebuffer(VkFramebuffer fb);

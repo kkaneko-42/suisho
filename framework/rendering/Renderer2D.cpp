@@ -35,6 +35,10 @@ bool Renderer2D::initialize() {
         return false;
     }
 
+    global_binding_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER } });
+    material_binding_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER} });
+    object_binding_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC} });
+
     render_pass_ = device_.createRenderPass();
     VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/triangle.vert.spv"));
     VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/triangle.frag.spv"));
@@ -91,6 +95,10 @@ void Renderer2D::createFramebuffers(const std::vector<backend::VulkanImage>& swa
 
 void Renderer2D::terminate() {
     device_.waitIdle();
+
+    device_.destroyBindingLayout(object_binding_layout_);
+    device_.destroyBindingLayout(material_binding_layout_);
+    device_.destroyBindingLayout(global_binding_layout_);
 
     for (auto& fb : framebuffers_) {
         device_.destroyFramebuffer(fb);
