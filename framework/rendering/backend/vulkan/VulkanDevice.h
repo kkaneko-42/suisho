@@ -8,6 +8,7 @@
 #include <variant>
 #include "rendering/backend/vulkan/VulkanImage.h"
 #include "rendering/backend/vulkan/VulkanBuffer.h"
+#include "rendering/backend/vulkan/VulkanBindingLayout.h"
 
 namespace suisho::backend {
 
@@ -62,10 +63,10 @@ public:
     );
     void destroyPipeline(VkPipeline pipeline, VkPipelineLayout layout);
 
-    VkDescriptorSetLayout createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& bindings);
-    void destroyBindingLayout(VkDescriptorSetLayout layout);
+    VulkanBindingLayout createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& bindings);
+    void destroyBindingLayout(VulkanBindingLayout& layout);
 
-    VkDescriptorSet createBindingSet(VkDescriptorSetLayout layout, const std::unordered_map<uint32_t, std::variant<VulkanBuffer>>& binded);
+    VkDescriptorSet createBindingSet(const VulkanBindingLayout& layout, const std::unordered_map<uint32_t, std::variant<VulkanBuffer>>& binded);
 
     // CONCERN: Assert attachment size is equal to framebuffer size
     VkFramebuffer createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass);

@@ -35,14 +35,14 @@ bool Renderer2D::initialize() {
         return false;
     }
 
-    global_binding_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER } });
-    material_binding_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER} });
-    object_binding_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC} });
+    global_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER } });
+    material_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER} });
+    object_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC} });
 
     render_pass_ = device_.createRenderPass();
     VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/test.vert.spv"));
     VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/test.frag.spv"));
-    pipeline_ = device_.createGraphicsPipeline(vert, frag, { global_binding_layout_ }, render_pass_, pipeline_layout_);
+    pipeline_ = device_.createGraphicsPipeline(vert, frag, { global_layout_.layout }, render_pass_, pipeline_layout_);
     device_.destroyShaderModule(vert);
     device_.destroyShaderModule(frag);
 
@@ -53,7 +53,7 @@ bool Renderer2D::initialize() {
         frame.cmd_execution = device_.createFence(true);
         frame.cmd_buf = device_.createCommandBuffer();
         frame.global_uniform = device_.createBuffer(sizeof(GlobalUniformBuffer), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        frame.global_binding = device_.createBindingSet(global_binding_layout_, { { 0, frame.global_uniform } });
+        frame.global_binding = device_.createBindingSet(global_layout_, { { 0, frame.global_uniform } });
     }
 
     device_.subscribeWindowResize([this](uint32_t w, uint32_t h) {
@@ -98,9 +98,9 @@ void Renderer2D::createFramebuffers(const std::vector<backend::VulkanImage>& swa
 void Renderer2D::terminate() {
     device_.waitIdle();
 
-    device_.destroyBindingLayout(object_binding_layout_);
-    device_.destroyBindingLayout(material_binding_layout_);
-    device_.destroyBindingLayout(global_binding_layout_);
+    device_.destroyBindingLayout(object_layout_);
+    device_.destroyBindingLayout(material_layout_);
+    device_.destroyBindingLayout(global_layout_);
 
     for (auto& fb : framebuffers_) {
         device_.destroyFramebuffer(fb);

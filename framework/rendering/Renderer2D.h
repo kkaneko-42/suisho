@@ -52,9 +52,9 @@ private:
 
     backend::VulkanDevice device_;
 
-    VkDescriptorSetLayout global_binding_layout_;
-    VkDescriptorSetLayout material_binding_layout_;
-    VkDescriptorSetLayout object_binding_layout_;
+    backend::VulkanBindingLayout global_layout_;
+    backend::VulkanBindingLayout material_layout_;
+    backend::VulkanBindingLayout object_layout_;
 
     VkRenderPass render_pass_;
     VkPipelineLayout pipeline_layout_;

@@ -305,7 +305,7 @@ void VulkanDevice::destroyPipeline(VkPipeline pipeline, VkPipelineLayout layout)
     vkDestroyPipelineLayout(device, layout, nullptr);
 }
 
-VkDescriptorSetLayout VulkanDevice::createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& layout_info) {
+VulkanBindingLayout VulkanDevice::createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& layout_info) {
     std::vector<VkDescriptorSetLayoutBinding> bindings;
     bindings.reserve(layout_info.size());
     for (auto& [idx, type] : layout_info) {
@@ -323,24 +323,26 @@ VkDescriptorSetLayout VulkanDevice::createBindingLayout(const std::unordered_map
     info.bindingCount = static_cast<uint32_t>(bindings.size());
     info.pBindings = bindings.data();
 
-    VkDescriptorSetLayout layout;
-    if (vkCreateDescriptorSetLayout(device, &info, nullptr, &layout) != VK_SUCCESS) {
+    VulkanBindingLayout layout;
+    if (vkCreateDescriptorSetLayout(device, &info, nullptr, &layout.layout) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create descriptor set layout");
     }
 
+    layout.bindings = layout_info;
     return layout;
 }
 
-void VulkanDevice::destroyBindingLayout(VkDescriptorSetLayout layout) {
-    vkDestroyDescriptorSetLayout(device, layout, nullptr);
+void VulkanDevice::destroyBindingLayout(VulkanBindingLayout& layout) {
+    vkDestroyDescriptorSetLayout(device, layout.layout, nullptr);
+    layout.layout = VK_NULL_HANDLE;
 }
 
-VkDescriptorSet VulkanDevice::createBindingSet(VkDescriptorSetLayout layout, const std::unordered_map<uint32_t, std::variant<VulkanBuffer>>& binded) {
+VkDescriptorSet VulkanDevice::createBindingSet(const VulkanBindingLayout& layout, const std::unordered_map<uint32_t, std::variant<VulkanBuffer>>& binded) {
     VkDescriptorSetAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     alloc_info.descriptorPool = descriptorPool;
     alloc_info.descriptorSetCount = 1;
-    alloc_info.pSetLayouts = &layout;
+    alloc_info.pSetLayouts = &layout.layout;
 
     VkDescriptorSet set;
     if (vkAllocateDescriptorSets(device, &alloc_info, &set) != VK_SUCCESS) {
@@ -360,7 +362,7 @@ VkDescriptorSet VulkanDevice::createBindingSet(VkDescriptorSetLayout layout, con
             buf_info.offset = 0;
             buf_info.range = std::get<VulkanBuffer>(resource).size;
             write_info.pBufferInfo = &buf_info;
-            write_info.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // FIXME
+            write_info.descriptorType = layout.bindings.at(binding);
 
             vkUpdateDescriptorSets(device, 1, &write_info, 0, nullptr);
             write_info.pBufferInfo = nullptr;
