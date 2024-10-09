@@ -186,7 +186,9 @@ void VulkanDevice::destroyRenderPass(VkRenderPass pass) {
 }
 
 VkPipeline VulkanDevice::createGraphicsPipeline(
-    VkShaderModule vert, VkShaderModule frag, VkRenderPass pass,
+    VkShaderModule vert, VkShaderModule frag,
+    const std::vector<VkDescriptorSetLayout>& binding_layouts,
+    VkRenderPass pass,
     VkPipelineLayout& out_layout
 ) {
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -267,7 +269,8 @@ VkPipeline VulkanDevice::createGraphicsPipeline(
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0;
+    pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(binding_layouts.size());
+    pipelineLayoutInfo.pSetLayouts = binding_layouts.data();
     if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &out_layout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -330,6 +333,44 @@ VkDescriptorSetLayout VulkanDevice::createBindingLayout(const std::unordered_map
 
 void VulkanDevice::destroyBindingLayout(VkDescriptorSetLayout layout) {
     vkDestroyDescriptorSetLayout(device, layout, nullptr);
+}
+
+VkDescriptorSet VulkanDevice::createBindingSet(VkDescriptorSetLayout layout, const std::unordered_map<uint32_t, std::variant<VulkanBuffer>>& binded) {
+    VkDescriptorSetAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc_info.descriptorPool = descriptorPool;
+    alloc_info.descriptorSetCount = 1;
+    alloc_info.pSetLayouts = &layout;
+
+    VkDescriptorSet set;
+    if (vkAllocateDescriptorSets(device, &alloc_info, &set) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to allocate descriptor set");
+    }
+
+    VkWriteDescriptorSet write_info{};
+    write_info.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_info.dstSet = set;
+    write_info.dstArrayElement = 0;
+    write_info.descriptorCount = 1;
+    for (auto& [binding, resource] : binded) {
+        write_info.dstBinding = binding;
+        if (resource.index() == 0) {
+            VkDescriptorBufferInfo buf_info{};
+            buf_info.buffer = std::get<VulkanBuffer>(resource).buffer;
+            buf_info.offset = 0;
+            buf_info.range = std::get<VulkanBuffer>(resource).size;
+            write_info.pBufferInfo = &buf_info;
+            write_info.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // FIXME
+
+            vkUpdateDescriptorSets(device, 1, &write_info, 0, nullptr);
+            write_info.pBufferInfo = nullptr;
+        }
+        else {
+            // Undefined resource type
+        }
+    }
+
+    return set;
 }
 
 VkFramebuffer VulkanDevice::createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass) {
@@ -892,30 +933,37 @@ void VulkanDevice::createDescriptorPool() {
     }
 }
 
-void VulkanDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+VulkanBuffer VulkanDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+    VulkanBuffer result{};
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
+    bufferInfo.size = result.size = size;
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+    if (vkCreateBuffer(device, &bufferInfo, nullptr, &result.buffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to create buffer!");
     }
 
     VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+    vkGetBufferMemoryRequirements(device, result.buffer, &memRequirements);
 
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+    if (vkAllocateMemory(device, &allocInfo, nullptr, &result.memory) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate buffer memory!");
     }
 
-    vkBindBufferMemory(device, buffer, bufferMemory, 0);
+    vkBindBufferMemory(device, result.buffer, result.memory, 0);
+
+    if (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
+        vkMapMemory(device, result.memory, 0, size, 0, &result.mapped);
+    }
+
+    return result;
 }
 
 VkCommandBuffer VulkanDevice::beginSingleTimeCommands() {
@@ -959,6 +1007,15 @@ void VulkanDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
     endSingleTimeCommands(commandBuffer);
+}
+
+void VulkanDevice::destroyBuffer(VulkanBuffer& buffer) {
+    vkFreeMemory(device, buffer.memory, nullptr);
+    vkDestroyBuffer(device, buffer.buffer, nullptr);
+    buffer.size = 0;
+    buffer.buffer = VK_NULL_HANDLE;
+    buffer.memory = VK_NULL_HANDLE;
+    buffer.mapped = nullptr;
 }
 
 uint32_t VulkanDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {

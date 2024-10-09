@@ -27,6 +27,7 @@ public:
     void setViewport(const VkViewport& viewport);
     void setScissor(const VkRect2D& scissor);
     void bindGraphicsPipeline(VkPipeline pipeline);
+    void bindBindingSet(VkDescriptorSet set, VkPipelineLayout layout);
 
     void draw(uint32_t vertex_count);
 

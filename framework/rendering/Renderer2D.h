@@ -38,9 +38,16 @@ public:
     Material createMaterial(const void* pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes);
 
 private:
+    struct GlobalUniformBuffer {
+        alignas(16) Mat4 view;
+        alignas(16) Mat4 proj;
+    };
+
     struct Frame {
         VkFence cmd_execution; // FIXME
         backend::VulkanCommandBuffer cmd_buf;
+        backend::VulkanBuffer global_uniform;
+        VkDescriptorSet global_binding;
     };
 
     backend::VulkanDevice device_;

@@ -5,7 +5,9 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <functional>
+#include <variant>
 #include "rendering/backend/vulkan/VulkanImage.h"
+#include "rendering/backend/vulkan/VulkanBuffer.h"
 
 namespace suisho::backend {
 
@@ -40,8 +42,9 @@ public:
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+    VulkanBuffer createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+    void destroyBuffer(VulkanBuffer& buffer);
 
     VkShaderModule createShaderModule(const std::vector<char>& code);
     void destroyShaderModule(VkShaderModule mod);
@@ -51,11 +54,18 @@ public:
     VkRenderPass createRenderPass();
     void destroyRenderPass(VkRenderPass pass);
 
-    VkPipeline createGraphicsPipeline(VkShaderModule vert, VkShaderModule frag, VkRenderPass pass, VkPipelineLayout& layout);
+    VkPipeline createGraphicsPipeline(
+        VkShaderModule vert, VkShaderModule frag,
+        const std::vector<VkDescriptorSetLayout>& binding_layouts,
+        VkRenderPass pass,
+        VkPipelineLayout& out_layout
+    );
     void destroyPipeline(VkPipeline pipeline, VkPipelineLayout layout);
 
-    VkDescriptorSetLayout createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& layout_info);
+    VkDescriptorSetLayout createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& bindings);
     void destroyBindingLayout(VkDescriptorSetLayout layout);
+
+    VkDescriptorSet createBindingSet(VkDescriptorSetLayout layout, const std::unordered_map<uint32_t, std::variant<VulkanBuffer>>& binded);
 
     // CONCERN: Assert attachment size is equal to framebuffer size
     VkFramebuffer createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass);

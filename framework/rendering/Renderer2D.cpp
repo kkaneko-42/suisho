@@ -40,18 +40,20 @@ bool Renderer2D::initialize() {
     object_binding_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC} });
 
     render_pass_ = device_.createRenderPass();
-    VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/triangle.vert.spv"));
-    VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/triangle.frag.spv"));
-    pipeline_ = device_.createGraphicsPipeline(vert, frag, render_pass_, pipeline_layout_);
+    VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/test.vert.spv"));
+    VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/test.frag.spv"));
+    pipeline_ = device_.createGraphicsPipeline(vert, frag, { global_binding_layout_ }, render_pass_, pipeline_layout_);
     device_.destroyShaderModule(vert);
     device_.destroyShaderModule(frag);
 
     const auto& swapchain_images = device_.getSwapchainImages();
     createDepthBuffer(swapchain_images[0].extent.width, swapchain_images[0].extent.height);
     createFramebuffers(swapchain_images);
-    for (size_t i = 0; i < kMaxFramesOverlapped; ++i) {
-        frames_[i].cmd_execution = device_.createFence(true);
-        frames_[i].cmd_buf = device_.createCommandBuffer();
+    for (auto& frame : frames_) {
+        frame.cmd_execution = device_.createFence(true);
+        frame.cmd_buf = device_.createCommandBuffer();
+        frame.global_uniform = device_.createBuffer(sizeof(GlobalUniformBuffer), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        frame.global_binding = device_.createBindingSet(global_binding_layout_, { { 0, frame.global_uniform } });
     }
 
     device_.subscribeWindowResize([this](uint32_t w, uint32_t h) {
@@ -104,9 +106,10 @@ void Renderer2D::terminate() {
         device_.destroyFramebuffer(fb);
     }
 
-    for (size_t i = 0; i < kMaxFramesOverlapped; ++i) {
-        device_.destroyFence(frames_[i].cmd_execution);
-        device_.destroyCommandBuffer(frames_[i].cmd_buf);
+    for (auto& frame : frames_) {
+        device_.destroyFence(frame.cmd_execution);
+        device_.destroyCommandBuffer(frame.cmd_buf);
+        device_.destroyBuffer(frame.global_uniform);
     }
 
     device_.destroyImage(depth_buffer_);
@@ -159,6 +162,8 @@ bool Renderer2D::beginFrame() {
     scissor.offset = { 0, 0 };
     scissor.extent = swapchain_extent;
     cmd.setScissor(scissor);
+
+    cmd.bindBindingSet(frames_[current_frame_].global_binding, pipeline_layout_);
 
     cmd.draw(3);
 
