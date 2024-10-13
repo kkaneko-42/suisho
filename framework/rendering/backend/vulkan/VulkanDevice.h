@@ -67,7 +67,10 @@ public:
     VulkanBindingLayout createBindingLayout(const std::unordered_map<uint32_t, VkDescriptorType>& bindings);
     void destroyBindingLayout(VulkanBindingLayout& layout);
 
-    VkDescriptorSet createBindingSet(const VulkanBindingLayout& layout, const std::unordered_map<uint32_t, std::variant<VulkanBuffer>>& binded);
+    VkDescriptorSet createBindingSet(
+        const VulkanBindingLayout& layout,
+        const std::unordered_map<uint32_t, std::variant<VulkanBuffer, VulkanTexture>>& binded
+    );
 
     // CONCERN: Assert attachment size is equal to framebuffer size
     VkFramebuffer createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass);

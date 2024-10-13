@@ -408,7 +408,10 @@ void VulkanDevice::destroyBindingLayout(VulkanBindingLayout& layout) {
     layout.layout = VK_NULL_HANDLE;
 }
 
-VkDescriptorSet VulkanDevice::createBindingSet(const VulkanBindingLayout& layout, const std::unordered_map<uint32_t, std::variant<VulkanBuffer>>& binded) {
+VkDescriptorSet VulkanDevice::createBindingSet(
+    const VulkanBindingLayout& layout,
+    const std::unordered_map<uint32_t, std::variant<VulkanBuffer, VulkanTexture>>& binded
+) {
     VkDescriptorSetAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     alloc_info.descriptorPool = descriptorPool;
@@ -427,16 +430,29 @@ VkDescriptorSet VulkanDevice::createBindingSet(const VulkanBindingLayout& layout
     write_info.descriptorCount = 1;
     for (auto& [binding, resource] : binded) {
         write_info.dstBinding = binding;
-        if (resource.index() == 0) {
+        if (resource.index() == 0) { // Buffer
+            const auto& buf = std::get<VulkanBuffer>(resource);
             VkDescriptorBufferInfo buf_info{};
-            buf_info.buffer = std::get<VulkanBuffer>(resource).buffer;
+            buf_info.buffer = buf.buffer;
             buf_info.offset = 0;
-            buf_info.range = std::get<VulkanBuffer>(resource).size;
+            buf_info.range = buf.size;
             write_info.pBufferInfo = &buf_info;
             write_info.descriptorType = layout.bindings.at(binding);
 
             vkUpdateDescriptorSets(device, 1, &write_info, 0, nullptr);
             write_info.pBufferInfo = nullptr;
+        }
+        else if (resource.index() == 1) { // Image
+            const auto& texture = std::get<VulkanTexture>(resource);
+            VkDescriptorImageInfo img_info{};
+            img_info.imageLayout = texture.image.layout;
+            img_info.imageView = texture.image.view;
+            img_info.sampler = texture.sampler;
+            write_info.pImageInfo = &img_info;
+            write_info.descriptorType = layout.bindings.at(binding);
+
+            vkUpdateDescriptorSets(device, 1, &write_info, 0, nullptr);
+            write_info.pImageInfo = nullptr;
         }
         else {
             // Undefined resource type
