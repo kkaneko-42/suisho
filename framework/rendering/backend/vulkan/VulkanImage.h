@@ -11,6 +11,7 @@ namespace suisho::backend {
 
         VkFormat format;
         VkExtent2D extent;
+        VkImageLayout layout;
     };
 }
 

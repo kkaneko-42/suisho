@@ -81,7 +81,7 @@ void Renderer2D::createDepthBuffer(uint32_t width, uint32_t height) {
     );
     depth_buffer_ = device_.createImage(
         width, height, nullptr,
-        depth_format, VK_IMAGE_TILING_OPTIMAL,
+        depth_format, VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
         VK_IMAGE_ASPECT_DEPTH_BIT
     );
