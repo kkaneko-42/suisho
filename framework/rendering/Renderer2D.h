@@ -45,11 +45,17 @@ private:
         alignas(16) Mat4 proj;
     };
 
+    struct ObjectUniformBuffer {
+        alignas(16) Mat4 model_to_world;
+    };
+
     struct Frame {
         VkFence cmd_execution; // FIXME
         backend::VulkanCommandBuffer cmd_buf;
         backend::VulkanBuffer global_uniform;
+        backend::VulkanBuffer object_uniform;
         VkDescriptorSet global_binding;
+        VkDescriptorSet object_binding;
     };
 
     backend::VulkanDevice device_;

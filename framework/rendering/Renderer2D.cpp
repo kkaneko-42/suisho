@@ -55,7 +55,9 @@ bool Renderer2D::initialize() {
         frame.cmd_execution = device_.createFence(true);
         frame.cmd_buf = device_.createCommandBuffer();
         frame.global_uniform = device_.createBuffer(sizeof(GlobalUniformBuffer), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        frame.object_uniform = device_.createBuffer(sizeof(ObjectUniformBuffer), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
         frame.global_binding = device_.createBindingSet(global_layout_, { { 0, frame.global_uniform } });
+        frame.object_binding = device_.createBindingSet(object_layout_, { { 0, frame.object_uniform } });
     }
 
     device_.subscribeWindowResize([this](uint32_t w, uint32_t h) {
@@ -112,6 +114,7 @@ void Renderer2D::terminate() {
         device_.destroyFence(frame.cmd_execution);
         device_.destroyCommandBuffer(frame.cmd_buf);
         device_.destroyBuffer(frame.global_uniform);
+        device_.destroyBuffer(frame.object_uniform);
     }
 
     device_.destroyImage(depth_buffer_);
