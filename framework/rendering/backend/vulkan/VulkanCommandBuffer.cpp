@@ -53,11 +53,11 @@ void VulkanCommandBuffer::bindGraphicsPipeline(VkPipeline pipeline) {
     vkCmdBindPipeline(cmd_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 }
 
-void VulkanCommandBuffer::bindBindingSet(VkDescriptorSet set, VkPipelineLayout layout) {
+void VulkanCommandBuffer::bindBindingSet(uint32_t index, VkDescriptorSet set, VkPipelineLayout layout) {
     vkCmdBindDescriptorSets(
         cmd_,
         VK_PIPELINE_BIND_POINT_GRAPHICS, layout,
-        0, 1, &set,
+        index, 1, &set,
         0, nullptr
     );
 }

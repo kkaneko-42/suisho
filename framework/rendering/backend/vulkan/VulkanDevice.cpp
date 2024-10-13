@@ -138,9 +138,13 @@ VulkanImage VulkanDevice::createImage(
         // Copy to the image
         transitionImageLayout(result, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         copyBufferToImage(staging.buffer, result.image, width, height);
+        
+        // Destroy staging buffer
+        destroyBuffer(staging);
     }
 
     transitionImageLayout(result, layout);
+    result.layout = layout;
     result.view = createImageView(result.image, format, view_aspect);
     return result;
 }
@@ -175,6 +179,12 @@ VulkanTexture VulkanDevice::createTexture(
     }
 
     return texture;
+}
+
+void VulkanDevice::destroyTexture(VulkanTexture& tex) {
+    destroyImage(tex.image);
+    vkDestroySampler(device, tex.sampler, nullptr);
+    tex.sampler = VK_NULL_HANDLE;
 }
 
 void VulkanDevice::destroyImage(VulkanImage& image) {
@@ -460,6 +470,10 @@ VkDescriptorSet VulkanDevice::createBindingSet(
     }
 
     return set;
+}
+
+void VulkanDevice::destroyBindingSet(VkDescriptorSet set) {
+    vkFreeDescriptorSets(device, descriptorPool, 1, &set);
 }
 
 VkFramebuffer VulkanDevice::createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass) {
@@ -944,6 +958,7 @@ void VulkanDevice::transitionImageLayout(VulkanImage& target, VkImageLayout to) 
     );
 
     endSingleTimeCommands(cmd);
+    target.layout = to;
 }
 
 void VulkanDevice::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) {
@@ -981,6 +996,7 @@ void VulkanDevice::createDescriptorPool() {
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
     poolInfo.maxSets = 256;

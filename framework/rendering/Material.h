@@ -1,21 +1,15 @@
 #ifndef SUISHO_RENDERING_MATERIAL_H_
 #define SUISHO_RENDERING_MATERIAL_H_
 
-#include <vulkan/vulkan.h>
+#include "backend/vulkan/VulkanTexture.h"
+#include "backend/vulkan/VulkanBindingLayout.h"
 
 namespace suisho {
 
-struct Texture {
-    VkImage image;
-    VkDeviceMemory memory;
-    VkImageView view;
-    VkSampler sampler;
-};
-
+// FIXME: Vulkan dependence
 struct Material {
-    Texture texture;
-    VkDescriptorSetLayout layout;
-    VkDescriptorSet descriptor;
+    backend::VulkanTexture texture;
+    VkDescriptorSet binding_set;
 };
 
 } // namespace suisho

@@ -41,6 +41,7 @@ public:
     void destroyImage(VulkanImage& image);
 
     VulkanTexture createTexture(uint32_t width, uint32_t height, const void* data, VkFormat format);
+    void destroyTexture(VulkanTexture& tex);
 
     void transitionImageLayout(VulkanImage& target, VkImageLayout to);
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
@@ -71,6 +72,7 @@ public:
         const VulkanBindingLayout& layout,
         const std::unordered_map<uint32_t, std::variant<VulkanBuffer, VulkanTexture>>& binded
     );
+    void destroyBindingSet(VkDescriptorSet set);
 
     // CONCERN: Assert attachment size is equal to framebuffer size
     VkFramebuffer createFramebuffer(const std::vector<VulkanImage>& attachments, VkRenderPass pass);

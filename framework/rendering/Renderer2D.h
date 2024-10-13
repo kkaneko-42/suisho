@@ -28,14 +28,16 @@ public:
     void terminate();
     bool shouldWindowClose() const; // FIXME
     bool beginFrame();
+    void endFrame();
+
     void bindMaterial(const Material& material);
     void draw(const Mat4& xform);
     void drawText(const std::string& s, const Vec2& pos, float rot_degree, const Vec2& scale);
-    void endFrame();
+
 
     // FIXME
-    Material createMaterial(const char* texture_path);
-    Material createMaterial(const void* pixels, uint32_t width, uint32_t height, uint32_t pixel_bytes);
+    Material createMaterial(const std::string& texture_path);
+    void destroyMaterial(Material& mat);
 
 private:
     struct GlobalUniformBuffer {

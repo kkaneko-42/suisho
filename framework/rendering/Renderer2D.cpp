@@ -1,5 +1,7 @@
 ﻿#include "rendering/Renderer2D.h"
 #include <fstream>
+#define STB_IMAGE_IMPLEMENTATION
+#include "rendering/stb_image.h" // FIXME
 
 using namespace suisho;
 
@@ -40,9 +42,9 @@ bool Renderer2D::initialize() {
     object_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC} });
 
     render_pass_ = device_.createRenderPass();
-    VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/test.vert.spv"));
-    VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/test.frag.spv"));
-    pipeline_ = device_.createGraphicsPipeline(vert, frag, { global_layout_.layout }, render_pass_, pipeline_layout_);
+    VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/quad.vert.spv"));
+    VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/quad.frag.spv"));
+    pipeline_ = device_.createGraphicsPipeline(vert, frag, { global_layout_.layout, material_layout_.layout }, render_pass_, pipeline_layout_);
     device_.destroyShaderModule(vert);
     device_.destroyShaderModule(frag);
 
@@ -162,11 +164,9 @@ bool Renderer2D::beginFrame() {
     scissor.offset = { 0, 0 };
     scissor.extent = swapchain_extent;
     cmd.setScissor(scissor);
-
-    cmd.bindBindingSet(frames_[current_frame_].global_binding, pipeline_layout_);
-
-    cmd.draw(3);
-
+    
+    // Global binding is set = 0
+    cmd.bindBindingSet(0, frames_[current_frame_].global_binding, pipeline_layout_);
     return true;
 }
 
@@ -179,4 +179,35 @@ void Renderer2D::endFrame() {
     device_.present(next_image_index_);
 
     current_frame_ = (current_frame_ + 1) % kMaxFramesOverlapped;
+}
+
+void Renderer2D::bindMaterial(const Material& material) {
+    // Material binding is set = 1
+    frames_[current_frame_].cmd_buf.bindBindingSet(1, material.binding_set, pipeline_layout_);
+}
+
+void Renderer2D::draw(const Mat4& xform) {
+    // TODO: Set transform
+    frames_[current_frame_].cmd_buf.draw(4);
+}
+
+Material Renderer2D::createMaterial(const std::string& texture_path) {
+    int width, height, channels;
+    stbi_uc* pixels = stbi_load(texture_path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+    if (pixels == nullptr) {
+        throw std::runtime_error("failed to load " + texture_path);
+    }
+
+    Material material{};
+    material.texture = device_.createTexture(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels, VK_FORMAT_R8G8B8A8_SRGB);
+    material.binding_set = device_.createBindingSet(material_layout_, { { 0, material.texture } });
+
+    stbi_image_free(pixels);
+    return material;
+}
+
+void Renderer2D::destroyMaterial(Material& mat) {
+    device_.waitIdle(); // FIXME
+    device_.destroyTexture(mat.texture);
+    device_.destroyBindingSet(mat.binding_set);
 }
