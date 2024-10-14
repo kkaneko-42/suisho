@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include <memory>
 #include "backend/vulkan/VulkanDevice.h"
 #include "backend/vulkan/VulkanCommandBuffer.h"
 #include "backend/vulkan/VulkanImage.h"
@@ -17,6 +18,7 @@ struct Renderer2DImpl;
 class Renderer2D {
 public:
     static constexpr size_t kMaxFramesOverlapped = 2;
+    static constexpr size_t kMaxObjectsCount = 1024;
 
     Renderer2D();
     ~Renderer2D();
@@ -54,11 +56,13 @@ private:
         backend::VulkanCommandBuffer cmd_buf;
         backend::VulkanBuffer global_uniform;
         backend::VulkanBuffer object_uniform;
+        void* object_uniform_data;
         VkDescriptorSet global_binding;
         VkDescriptorSet object_binding;
     };
 
     backend::VulkanDevice device_;
+    size_t dynamic_alignment_;
 
     backend::VulkanBindingLayout global_layout_;
     backend::VulkanBindingLayout material_layout_;
@@ -74,6 +78,7 @@ private:
     std::array<Frame, kMaxFramesOverlapped> frames_;
     size_t current_frame_;
     uint32_t next_image_index_;
+    uint32_t drawed_count_;
 
     void createDepthBuffer(uint32_t width, uint32_t height);
     void createFramebuffers(const std::vector<backend::VulkanImage>& swapchain_images);

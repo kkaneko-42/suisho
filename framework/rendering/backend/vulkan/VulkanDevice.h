@@ -28,6 +28,7 @@ public:
         onWindowResize.push_back(std::forward<F>(f));
     }
 
+    VkPhysicalDeviceProperties getProperties() const;
     const std::vector<VulkanImage>& getSwapchainImages() const { return swapChainImages; }
 
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
@@ -47,6 +48,7 @@ public:
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     VulkanBuffer createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+    void flushBuffer(VulkanBuffer& buffer, VkDeviceSize offset, VkDeviceSize size);
     void destroyBuffer(VulkanBuffer& buffer);
 
     VkShaderModule createShaderModule(const std::vector<char>& code);

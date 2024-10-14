@@ -28,6 +28,7 @@ public:
     void setScissor(const VkRect2D& scissor);
     void bindGraphicsPipeline(VkPipeline pipeline);
     void bindBindingSet(uint32_t index, VkDescriptorSet set, VkPipelineLayout layout);
+    void bindBindingSetDynamic(uint32_t index, uint32_t offset, VkDescriptorSet set, VkPipelineLayout layout);
 
     void draw(uint32_t vertex_count);
 

@@ -78,6 +78,12 @@ bool VulkanDevice::isWindowMinimized() const {
     return (w == 0) || (h == 0);
 }
 
+VkPhysicalDeviceProperties VulkanDevice::getProperties() const {
+    VkPhysicalDeviceProperties props;
+    vkGetPhysicalDeviceProperties(physicalDevice, &props);
+    return props;
+}
+
 void VulkanDevice::initWindow() {
     glfwInit();
 
@@ -307,7 +313,7 @@ VkPipeline VulkanDevice::createGraphicsPipeline(
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizer.cullMode = VK_CULL_MODE_NONE;
     rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -1080,6 +1086,22 @@ void VulkanDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
     endSingleTimeCommands(commandBuffer);
+}
+
+void VulkanDevice::flushBuffer(VulkanBuffer& buffer, VkDeviceSize offset, VkDeviceSize size) {
+    if (buffer.mapped == nullptr) {
+        std::cerr << "WARNING: Try to flush unmapped memory. Ignored." << std::endl;
+        return;
+    }
+
+    VkMappedMemoryRange range{};
+    range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    range.memory = buffer.memory;
+    range.offset = offset;
+    range.size = size;
+    if (vkFlushMappedMemoryRanges(device, 1, &range) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to flush buffer");
+    }
 }
 
 void VulkanDevice::destroyBuffer(VulkanBuffer& buffer) {

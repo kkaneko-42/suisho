@@ -1,4 +1,6 @@
 ﻿#include "rendering/Renderer2D.h"
+#include "math/suisho_math.h"
+#include <cstdlib>
 #include <fstream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "rendering/stb_image.h" // FIXME
@@ -23,7 +25,7 @@ static std::vector<char> readBinary(const std::string& filepath) {
     return buffer;
 }
 
-Renderer2D::Renderer2D() : frames_(), current_frame_(0) {
+Renderer2D::Renderer2D() : frames_(), current_frame_(0), drawed_count_(0) {
 
 }
 
@@ -36,6 +38,10 @@ bool Renderer2D::initialize() {
     if (!ok) {
         return false;
     }
+    dynamic_alignment_ = device_.getProperties().limits.minUniformBufferOffsetAlignment;
+    if (dynamic_alignment_ > 0) {
+        dynamic_alignment_ = (sizeof(ObjectUniformBuffer) + dynamic_alignment_ - 1) & ~(dynamic_alignment_ - 1);
+    }
 
     global_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER } });
     material_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER} });
@@ -44,7 +50,7 @@ bool Renderer2D::initialize() {
     render_pass_ = device_.createRenderPass();
     VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/quad.vert.spv"));
     VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/quad.frag.spv"));
-    pipeline_ = device_.createGraphicsPipeline(vert, frag, { global_layout_.layout, material_layout_.layout }, render_pass_, pipeline_layout_);
+    pipeline_ = device_.createGraphicsPipeline(vert, frag, { global_layout_.layout, material_layout_.layout, object_layout_.layout }, render_pass_, pipeline_layout_);
     device_.destroyShaderModule(vert);
     device_.destroyShaderModule(frag);
 
@@ -55,9 +61,23 @@ bool Renderer2D::initialize() {
         frame.cmd_execution = device_.createFence(true);
         frame.cmd_buf = device_.createCommandBuffer();
         frame.global_uniform = device_.createBuffer(sizeof(GlobalUniformBuffer), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        frame.object_uniform = device_.createBuffer(sizeof(ObjectUniformBuffer), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        frame.object_uniform = device_.createBuffer(dynamic_alignment_ * kMaxObjectsCount, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+
+#ifdef _MSC_VER
+        frame.object_uniform_data = _aligned_malloc(frame.object_uniform.size, dynamic_alignment_);
+#else
+        frame.object_uniform_data = std::aligned_alloc(dynamic_alignment_, frame.object_uniform.size);
+#endif
+        if (frame.object_uniform_data == nullptr) {
+            throw std::bad_alloc();
+        }
+
         frame.global_binding = device_.createBindingSet(global_layout_, { { 0, frame.global_uniform } });
+
+        const size_t actual_size = frame.object_uniform.size;
+        frame.object_uniform.size = dynamic_alignment_; // Binded size
         frame.object_binding = device_.createBindingSet(object_layout_, { { 0, frame.object_uniform } });
+        frame.object_uniform.size = actual_size;
     }
 
     device_.subscribeWindowResize([this](uint32_t w, uint32_t h) {
@@ -115,6 +135,11 @@ void Renderer2D::terminate() {
         device_.destroyCommandBuffer(frame.cmd_buf);
         device_.destroyBuffer(frame.global_uniform);
         device_.destroyBuffer(frame.object_uniform);
+#ifdef _MSC_VER
+        _aligned_free(frame.object_uniform_data);
+#else
+        std::free(frame.object_uniform_data);
+#endif
     }
 
     device_.destroyImage(depth_buffer_);
@@ -133,13 +158,14 @@ bool Renderer2D::beginFrame() {
         return false;
     }
 
-    device_.waitForFence(frames_[current_frame_].cmd_execution, UINT64_MAX);
-    device_.resetFence(frames_[current_frame_].cmd_execution);
+    auto& frame = frames_[current_frame_];
+    device_.waitForFence(frame.cmd_execution, UINT64_MAX);
+    device_.resetFence(frame.cmd_execution);
 
     // TODO: Error validation
     next_image_index_ = device_.acquireNextImage();;
 
-    backend::VulkanCommandBuffer& cmd = frames_[current_frame_].cmd_buf;
+    backend::VulkanCommandBuffer& cmd = frame.cmd_buf;
     cmd.reset();
 
     cmd.beginRecording();
@@ -169,19 +195,29 @@ bool Renderer2D::beginFrame() {
     cmd.setScissor(scissor);
     
     // Global binding is set = 0
+    GlobalUniformBuffer camera{};
+    camera.view = Mat4::lookAt(Vec3(0.0f, 0.0f, -3.0f), Vec3::kZero, -Vec3::kUp);
+    camera.proj = Mat4::perspective(45.0f, swapchain_extent.width / static_cast<float>(swapchain_extent.height), 0.1f, 10.0f);
+    camera.proj[1][1] *= -1;
+    std::memcpy(frame.global_uniform.mapped, &camera, sizeof(GlobalUniformBuffer));
     cmd.bindBindingSet(0, frames_[current_frame_].global_binding, pipeline_layout_);
     return true;
 }
 
 void Renderer2D::endFrame() {
-    backend::VulkanCommandBuffer& cmd = frames_[current_frame_].cmd_buf;
+    auto& frame = frames_[current_frame_];
+    std::memcpy(frame.object_uniform.mapped, frame.object_uniform_data, dynamic_alignment_ * drawed_count_);
+    device_.flushBuffer(frame.object_uniform, 0, dynamic_alignment_ * drawed_count_);
+
+    backend::VulkanCommandBuffer& cmd = frame.cmd_buf;
     cmd.endRenderPass();
 
     cmd.endRecording();
-    device_.submit(cmd, frames_[current_frame_].cmd_execution);
+    device_.submit(cmd, frame.cmd_execution);
     device_.present(next_image_index_);
 
     current_frame_ = (current_frame_ + 1) % kMaxFramesOverlapped;
+    drawed_count_ = 0;
 }
 
 void Renderer2D::bindMaterial(const Material& material) {
@@ -190,8 +226,15 @@ void Renderer2D::bindMaterial(const Material& material) {
 }
 
 void Renderer2D::draw(const Mat4& xform) {
-    // TODO: Set transform
-    frames_[current_frame_].cmd_buf.draw(4);
+    auto& frame = frames_[current_frame_];
+    ObjectUniformBuffer& dst = *reinterpret_cast<ObjectUniformBuffer*>(
+        reinterpret_cast<uintptr_t>(frame.object_uniform_data) + (dynamic_alignment_ * drawed_count_)
+    );
+    dst.model_to_world = xform;
+
+    frame.cmd_buf.bindBindingSetDynamic(2, dynamic_alignment_ * drawed_count_, frame.object_binding, pipeline_layout_);
+    frame.cmd_buf.draw(4);
+    ++drawed_count_;
 }
 
 Material Renderer2D::createMaterial(const std::string& texture_path) {

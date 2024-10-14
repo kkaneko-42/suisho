@@ -21,7 +21,7 @@ void RenderingSystem::update(Params& params) {
         renderer_.destroyMaterial(mandrill);
         renderer_.destroyMaterial(statue);
         renderer_.terminate();
-        exit(1);
+        exit(0);
     }
 
     if (renderer_.beginFrame()) {
