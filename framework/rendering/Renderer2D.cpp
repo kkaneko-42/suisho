@@ -47,6 +47,17 @@ bool Renderer2D::initialize() {
     material_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER} });
     object_layout_ = device_.createBindingLayout({ {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC} });
 
+    // Build default material
+    {
+        constexpr uint32_t tex_w = 4;
+        constexpr uint32_t tex_h = 4;
+        constexpr size_t tex_size = tex_w * tex_h * 4; // RGBA
+        unsigned char texels[tex_size];
+        std::memset(texels, 0xff, tex_size);
+        default_material_.texture = device_.createTexture(tex_w, tex_h, texels, VK_FORMAT_R8G8B8A8_SRGB);
+        default_material_.binding_set = device_.createBindingSet(material_layout_, {{ 0, default_material_.texture }});
+    }
+
     render_pass_ = device_.createRenderPass();
     VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/quad.vert.spv"));
     VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/quad.frag.spv"));
@@ -125,6 +136,7 @@ void Renderer2D::terminate() {
     device_.destroyBindingLayout(object_layout_);
     device_.destroyBindingLayout(material_layout_);
     device_.destroyBindingLayout(global_layout_);
+    destroyMaterial(default_material_);
 
     for (auto& fb : framebuffers_) {
         device_.destroyFramebuffer(fb);
@@ -193,14 +205,17 @@ bool Renderer2D::beginFrame() {
     scissor.offset = { 0, 0 };
     scissor.extent = swapchain_extent;
     cmd.setScissor(scissor);
-    
-    // Global binding is set = 0
+
+    // Prepare global binding
     GlobalUniformBuffer camera{};
     camera.view = Mat4::lookAt(Vec3(0.0f, 0.0f, -3.0f), Vec3::kZero, -Vec3::kUp);
     camera.proj = Mat4::perspective(45.0f, swapchain_extent.width / static_cast<float>(swapchain_extent.height), 0.1f, 10.0f);
     camera.proj[1][1] *= -1;
     std::memcpy(frame.global_uniform.mapped, &camera, sizeof(GlobalUniformBuffer));
-    cmd.bindBindingSet(0, frames_[current_frame_].global_binding, pipeline_layout_);
+    cmd.bindBindingSet(0, frames_[current_frame_].global_binding, pipeline_layout_); // Global binding is set = 0
+
+    // Bind default material(set = 1)
+    cmd.bindBindingSet(1, default_material_.binding_set, pipeline_layout_);
     return true;
 }
 

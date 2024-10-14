@@ -25,6 +25,13 @@ void RenderingSystem::update(Params& params) {
     }
 
     if (renderer_.beginFrame()) {
+        // With default material
+        for (int32_t y = 0; y < 5; ++y) {
+            for (int32_t x = 0; x < 5; ++x) {
+                renderer_.draw(Mat4::scale(0.2f * Vec3::kOne) * Mat4::translate(1.1f * Vec3(x - 5, y - 5, 0.0f)));
+            }
+        }
+
         // With mandrill
         renderer_.bindMaterial(mandrill);
         for (int32_t y = 0; y < 5; ++y) {

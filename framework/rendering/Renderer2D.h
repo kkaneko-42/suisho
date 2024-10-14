@@ -67,6 +67,7 @@ private:
     backend::VulkanBindingLayout global_layout_;
     backend::VulkanBindingLayout material_layout_;
     backend::VulkanBindingLayout object_layout_;
+    Material default_material_;
 
     VkRenderPass render_pass_;
     VkPipelineLayout pipeline_layout_;
