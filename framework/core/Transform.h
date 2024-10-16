@@ -9,6 +9,10 @@ namespace suisho {
 /// @brief Position, Rotation, Scale in 3D world
 /// @todo Rotation implement
 struct Transform {
+    /// @brief Create Transform from the position, rotation, and scale
+    /// @param pos position
+    /// @param scl scale
+    /// @todo Rotation
     Transform(const Vec3& pos = Vec3::kZero, const Vec3& scl = Vec3::kOne);
 
     /// @brief 3D position
