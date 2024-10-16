@@ -175,7 +175,9 @@ bool Renderer2D::beginFrame() {
     device_.resetFence(frame.cmd_execution);
 
     // TODO: Error validation
-    next_image_index_ = device_.acquireNextImage();;
+    if (device_.swapBackBuffer() == UINT32_MAX) {
+        return false;
+    }
 
     backend::VulkanCommandBuffer& cmd = frame.cmd_buf;
     cmd.reset();
@@ -187,7 +189,7 @@ bool Renderer2D::beginFrame() {
     clear_values[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
     clear_values[1].depthStencil = { 1.0f, 0 };
     cmd.beginRenderPass(
-        render_pass_, framebuffers_[next_image_index_],
+        render_pass_, framebuffers_[device_.getNextImageIndex()],
         clear_values, swapchain_extent
     );
 
@@ -229,7 +231,7 @@ void Renderer2D::endFrame() {
 
     cmd.endRecording();
     device_.submit(cmd, frame.cmd_execution);
-    device_.present(next_image_index_);
+    device_.present();
 
     current_frame_ = (current_frame_ + 1) % kMaxFramesOverlapped;
     drawed_count_ = 0;

@@ -78,7 +78,6 @@ private:
 
     std::array<Frame, kMaxFramesOverlapped> frames_;
     size_t current_frame_;
-    uint32_t next_image_index_;
     uint32_t drawed_count_;
 
     void createDepthBuffer(uint32_t width, uint32_t height);

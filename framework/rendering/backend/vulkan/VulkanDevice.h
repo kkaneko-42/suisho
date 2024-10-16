@@ -84,9 +84,10 @@ public:
     void destroyCommandBuffer(VulkanCommandBuffer& buf);
 
     bool submit(const VulkanCommandBuffer& cmds, VkFence sync);
-    bool present(uint32_t image_index);
+    bool present();
 
-    uint32_t acquireNextImage();
+    uint32_t swapBackBuffer();
+    uint32_t getNextImageIndex() const { return nextImageIndex; }
     void waitIdle();
 
     VkFence createFence(bool signaled = false);
@@ -129,14 +130,13 @@ private:
     VkQueue presentQueue;
 
     VkSwapchainKHR swapChain;
+    uint32_t nextImageIndex = UINT32_MAX;
     std::vector<VulkanImage> swapChainImages;
+    std::vector<VkSemaphore> presentationSyncs;
+    std::vector<VkSemaphore> renderingSyncs;
 
     VkCommandPool commandPool;
-
     VkDescriptorPool descriptorPool;
-
-    VkSemaphore presentationSync;
-    VkSemaphore renderingSync;
 
     bool framebufferResized = false;
     static void onGlfwWindowResized(GLFWwindow* window, int width, int height);
