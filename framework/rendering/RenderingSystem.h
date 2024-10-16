@@ -2,11 +2,12 @@
 #define SUISHO_RENDERING_RENDERING_SYSTEM_H_
 
 #include "core/ISystem.h"
+#include "core/Transform.h"
 #include "rendering/Renderer2D.h"
 
 namespace suisho {
 
-class RenderingSystem : public ISystem<std::tuple<>> {
+class RenderingSystem : public ISystem<std::tuple<const Transform>> {
 public:
     RenderingSystem();
     ~RenderingSystem();
