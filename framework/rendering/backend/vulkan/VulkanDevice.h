@@ -130,7 +130,7 @@ private:
     VkQueue presentQueue;
 
     VkSwapchainKHR swapChain;
-    uint32_t nextImageIndex = UINT32_MAX;
+    uint32_t nextImageIndex = 0;
     std::vector<VulkanImage> swapChainImages;
     std::vector<VkSemaphore> presentationSyncs;
     std::vector<VkSemaphore> renderingSyncs;

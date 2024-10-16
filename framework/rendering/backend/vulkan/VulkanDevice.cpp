@@ -580,8 +580,8 @@ bool VulkanDevice::present() {
 }
 
 uint32_t VulkanDevice::swapBackBuffer() {
-    // FIXME: Assert vkAcquireNextImageKHR returns 0, 1, 2, 0, ...
-    if (vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, presentationSyncs[(nextImageIndex + 1) % swapChainImages.size()], VK_NULL_HANDLE, &nextImageIndex) != VK_SUCCESS) {
+    // FIXME: Validation error
+    if (vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, presentationSyncs[nextImageIndex], VK_NULL_HANDLE, &nextImageIndex) != VK_SUCCESS) {
         return UINT32_MAX;
     }
 
