@@ -67,7 +67,7 @@ void VulkanCommandBuffer::bindBindingSetDynamic(uint32_t index, uint32_t offset,
         cmd_,
         VK_PIPELINE_BIND_POINT_GRAPHICS, layout,
         index, 1, &set,
-       1, &offset
+        1, &offset
     );
 }
 
