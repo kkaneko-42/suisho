@@ -4,4 +4,5 @@ set(SUISHO_CORE_SRCS
     core/EntityCommandBuffer.cpp
     core/SystemScheduler.cpp
     core/exceptions.cpp
+	core/Transform.cpp
 )

@@ -9,6 +9,8 @@ namespace suisho {
 /// @brief Position, Rotation, Scale in 3D world
 /// @todo Rotation implement
 struct Transform {
+    Transform(const Vec3& pos = Vec3::kZero, const Vec3& scl = Vec3::kOne);
+
     /// @brief 3D position
     Vec3 position;
 
@@ -17,9 +19,7 @@ struct Transform {
 
     /// @brief Create the 3D affine transform matrix
     /// @return The matrix
-    Mat4 toMatrix() const {
-        return Mat4::translate(position) * Mat4::scale(scale);
-    }
+    Mat4 toMatrix() const;
 };
 
 } // namespace suisho
