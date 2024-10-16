@@ -31,6 +31,7 @@ public:
     void bindBindingSetDynamic(uint32_t index, uint32_t offset, VkDescriptorSet set, VkPipelineLayout layout);
 
     void draw(uint32_t vertex_count);
+    void drawInstanced(uint32_t vertex_count, uint32_t instance_count);
 
 private:
     VkCommandBuffer cmd_;

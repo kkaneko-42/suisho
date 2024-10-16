@@ -67,10 +67,14 @@ void VulkanCommandBuffer::bindBindingSetDynamic(uint32_t index, uint32_t offset,
         cmd_,
         VK_PIPELINE_BIND_POINT_GRAPHICS, layout,
         index, 1, &set,
-        1, &offset
+       1, &offset
     );
 }
 
 void VulkanCommandBuffer::draw(uint32_t vertex_count) {
     vkCmdDraw(cmd_, vertex_count, 1, 0, 0);
+}
+
+void VulkanCommandBuffer::drawInstanced(uint32_t vertex_count, uint32_t instance_count) {
+    vkCmdDraw(cmd_, vertex_count, instance_count, 0, 0);
 }
