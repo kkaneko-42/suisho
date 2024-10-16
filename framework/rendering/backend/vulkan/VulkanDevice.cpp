@@ -1,5 +1,6 @@
 #include "rendering/backend/vulkan/VulkanDevice.h"
 #include "rendering/backend/vulkan/VulkanCommandBuffer.h"
+#include <cstring> // memcpy, strcmp
 #include <string>
 #include <iostream>
 #include <set>
@@ -1314,7 +1315,7 @@ bool VulkanDevice::checkValidationLayerSupport() {
         bool layerFound = false;
 
         for (const auto& layerProperties : availableLayers) {
-            if (strcmp(layerName, layerProperties.layerName) == 0) {
+            if (std::strcmp(layerName, layerProperties.layerName) == 0) {
                 layerFound = true;
                 break;
             }

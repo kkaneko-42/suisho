@@ -1,6 +1,7 @@
 ﻿#include "rendering/Renderer2D.h"
 #include "math/suisho_math.h"
 #include <cstdlib>
+#include <cstring> // memcpy, memset
 #include <fstream>
 #define STB_IMAGE_IMPLEMENTATION
 #include "rendering/stb_image.h" // FIXME
