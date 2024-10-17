@@ -1,7 +1,19 @@
 #include "suisho.h"
 #include <iostream>
+#include <chrono>
 
 using namespace suisho;
+
+class ScalingSystem : public ISystem<std::tuple<Transform>> {
+public:
+    void update(Params& params) {
+        params.query.forEach([](Transform& xform) {
+            static auto begin_time = std::chrono::system_clock::now();
+            const float duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - begin_time).count();
+            xform.scale = std::abs(std::sin(duration * 1e-3)) * Vec3::kOne;
+        });
+    }
+};
 
 static World createWorld() {
     World world;
@@ -26,6 +38,9 @@ int main() {
 
     RenderingSystem rendering;
     scheduler.addSystem(rendering);
+
+    ScalingSystem scaling;
+    scheduler.addSystem(scaling);
 
     while (true) {
         scheduler.update(world);
