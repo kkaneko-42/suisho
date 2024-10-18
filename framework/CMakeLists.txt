@@ -2,15 +2,10 @@ cmake_minimum_required(VERSION 3.11)
 project(suisho_framework CXX)
 
 find_package(Vulkan REQUIRED)
+# TODO: FindGLFW
 
 # Fetch dependencies
 include(FetchContent)
-
-FetchContent_Declare(
-	glfw
-	GIT_REPOSITORY https://github.com/glfw/glfw
-	GIT_TAG 3.4
-)
 
 FetchContent_Declare(
     entt
@@ -24,7 +19,7 @@ FetchContent_Declare(
     GIT_TAG VER-2-13-3
 )
 
-FetchContent_MakeAvailable(glfw entt freetype)
+FetchContent_MakeAvailable(entt freetype)
 
 # Gather engine sources
 include(core/CMakeLists.txt)
@@ -42,7 +37,6 @@ target_compile_features(suisho_framework PUBLIC cxx_std_17)
 target_compile_definitions(suisho_framework PUBLIC SUISHO_BUILTIN_ASSETS_DIR="${PROJECT_SOURCE_DIR}/assets/")
 target_include_directories(suisho_framework PUBLIC ./)
 target_include_directories(suisho_framework PUBLIC ${Vulkan_INCLUDE_DIR})
-target_include_directories(suisho_framework PUBLIC ${glfw_SOURCE_DIR}/include)
 target_include_directories(suisho_framework PUBLIC ${entt_SOURCE_DIR}/src)
 target_include_directories(suisho_framework PUBLIC ${freetype_SOURCE_DIR}/include)
 

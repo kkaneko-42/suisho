@@ -6,6 +6,7 @@
 #include <set>
 #include <array>
 #include <algorithm>
+#include <limits>
 
 using namespace suisho;
 using namespace suisho::backend;
@@ -1183,8 +1184,9 @@ VkPresentModeKHR VulkanDevice::chooseSwapPresentMode(const std::vector<VkPresent
 }
 
 VkExtent2D VulkanDevice::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+    VkExtent2D extent;
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-        return capabilities.currentExtent;
+        extent = capabilities.currentExtent;
     }
     else {
         int width, height;
@@ -1198,8 +1200,10 @@ VkExtent2D VulkanDevice::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabi
         actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
         actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
-        return actualExtent;
+        extent = actualExtent;
     }
+
+    return extent;
 }
 
 VulkanDevice::SwapChainSupportDetails VulkanDevice::querySwapChainSupport(VkPhysicalDevice device) {
