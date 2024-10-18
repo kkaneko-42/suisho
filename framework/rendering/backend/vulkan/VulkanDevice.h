@@ -110,6 +110,9 @@ private:
     struct QueueFamilyIndices {
         uint32_t graphicsFamily;
         uint32_t presentFamily;
+        bool isComplete() const {
+            return graphicsFamily != UINT32_MAX && presentFamily != UINT32_MAX;
+        }
     };
 
     bool isDebugged = true;

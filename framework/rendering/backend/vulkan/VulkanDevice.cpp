@@ -1244,7 +1244,7 @@ bool VulkanDevice::isDeviceSuitable(VkPhysicalDevice device) {
     VkPhysicalDeviceFeatures supportedFeatures;
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-    return extensionsSupported && swapChainAdequate;
+    return indices.isComplete() &&  extensionsSupported && swapChainAdequate;
 }
 
 bool VulkanDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
@@ -1271,24 +1271,23 @@ VulkanDevice::QueueFamilyIndices VulkanDevice::findQueueFamilies(VkPhysicalDevic
     std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-    int i = 0;
+    uint32_t index = 0;
     for (const auto& queueFamily : queueFamilies) {
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            indices.graphicsFamily = i;
+            indices.graphicsFamily = index;
         }
 
         VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, index, surface, &presentSupport);
         if (presentSupport) {
-            indices.presentFamily = i;
+            indices.presentFamily = index;
         }
 
-        if (indices.graphicsFamily != UINT32_MAX && indices.presentFamily != UINT32_MAX) {
+        if (indices.isComplete()) {
             break;
         }
 
-        i++;
+        ++index;
     }
 
     return indices;
