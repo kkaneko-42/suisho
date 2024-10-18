@@ -1,0 +1,4 @@
+set(
+	SUISHO_INPUT_SRCS
+
+)
