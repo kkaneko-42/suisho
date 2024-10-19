@@ -32,7 +32,7 @@ namespace suisho {
 
         bool poll() override;
         bool isPressed(int keycode) override;
-        float getAxis1D(int scancode);
+        float getAxis1D(int scancode) override;
         Vec2 getAxis2D(int scancode) override;
 
     private:
