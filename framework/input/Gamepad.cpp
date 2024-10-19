@@ -37,6 +37,21 @@ bool Gamepad::isPressed(int keycode) {
     return state_->buttons[kKeycodeTable.at(keycode)];
 }
 
+float Gamepad::getAxis1D(int keycode) {
+    int actual_keycode = 0;
+    if (keycode == kTriggerLeft) {
+        actual_keycode = GLFW_GAMEPAD_AXIS_LEFT_TRIGGER;
+    }
+    else if (keycode == kTriggerRight) {
+        actual_keycode = GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER;
+    }
+    else {
+        throw std::runtime_error("Gamepad::getAxis1D(): Invalid keycode " + keycode);
+    }
+
+    return state_->axes[actual_keycode];
+}
+
 Vec2 Gamepad::getAxis2D(int keycode) {
     int x_keycode = 0;
     if (keycode == kLeftStick) {

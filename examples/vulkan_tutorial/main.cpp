@@ -45,8 +45,8 @@ int main() {
     Gamepad pad(1);
     while (true) {
         pad.poll();
-        std::cout << "LeftStick: " << pad.isPressed(Gamepad::kLeftStick) << std::endl;
-        std::cout << "RightStick: " << pad.isPressed(Gamepad::kRightStick) << std::endl;
+        std::cout << "TriggerLeft: " << pad.getAxis1D(Gamepad::kTriggerLeft) << std::endl;
+        std::cout << "TriggerRight: " << pad.getAxis1D(Gamepad::kTriggerRight) << std::endl;
         scheduler.update(world);
     }
 
