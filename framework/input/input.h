@@ -4,5 +4,6 @@
 #include "input/IInputDevice.h"
 #include "input/Keyboard.h"
 #include "input/Mouse.h"
+#include "input/Gamepad.h"
 
 #endif // SUISHO_INPUT_H_

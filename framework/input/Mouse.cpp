@@ -32,8 +32,11 @@ bool Mouse::isPressed(int keycode) {
 
 Vec2 Mouse::getAxis2D(int) {
     GLFWwindow* ctx = reinterpret_cast<GLFWwindow*>(win_);
+    int win_w, win_h;
+    glfwGetWindowSize(ctx, &win_w, &win_h);
+
     double x, y;
     glfwGetCursorPos(ctx, &x, &y);
 
-    return Vec2(x, y);
+    return Vec2(x, -y + win_h);
 }

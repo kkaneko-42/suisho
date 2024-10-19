@@ -42,13 +42,11 @@ int main() {
     ScalingSystem scaling;
     scheduler.addSystem(scaling);
 
-    Mouse mouse(rendering.getWindowHandle());
+    Gamepad pad(1);
     while (true) {
-        mouse.poll();
-        std::cout << "Left: " << mouse.isPressed(Mouse::kLeft) << std::endl;
-        std::cout << "Right: " << mouse.isPressed(Mouse::kRight) << std::endl;
-        std::cout << "Middle: " << mouse.isPressed(Mouse::kMiddle) << std::endl;
-        std::cout << "Pos: " << mouse.getAxis2D().x << ", " << mouse.getAxis2D().y << std::endl;
+        pad.poll();
+        std::cout << "Left: " << pad.getAxis2D(Gamepad::kLeftStick).x << ", " << pad.getAxis2D(Gamepad::kLeftStick).y << std::endl;
+        std::cout << "Right: " << pad.getAxis2D(Gamepad::kRightStick).x << ", " << pad.getAxis2D(Gamepad::kRightStick).y << std::endl;
         scheduler.update(world);
     }
 
