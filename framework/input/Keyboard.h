@@ -22,10 +22,6 @@ public:
     bool poll() override;
     bool isPressed(int keycode) override;
 
-    Vec2 getAxis2D(int scancode) override {
-        throw std::logic_error("Keyboard has no 2D-axial controls");
-    }
-
 private:
     void* win_;
     std::bitset<UCHAR_MAX> states_;

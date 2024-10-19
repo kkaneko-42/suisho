@@ -29,6 +29,8 @@ bool Gamepad::poll() {
     if (glfwGetGamepadState(id_, state_.get()) == GLFW_FALSE) {
         return false;
     }
+
+    return true;
 }
 
 bool Gamepad::isPressed(int keycode) {

@@ -42,7 +42,7 @@ int main() {
     ScalingSystem scaling;
     scheduler.addSystem(scaling);
 
-    Gamepad pad(1);
+    Gamepad pad(0);
     while (true) {
         pad.poll();
         std::cout << "Start: " << pad.isPressed(Gamepad::kStart) << std::endl;
