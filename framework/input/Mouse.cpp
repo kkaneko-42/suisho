@@ -1,0 +1,38 @@
+#include "input/Mouse.h"
+#include <unordered_map>
+#include <GLFW/glfw3.h>
+
+using namespace suisho;
+
+Mouse::Mouse(void* win) : win_(win)
+{}
+
+bool Mouse::poll() {
+    glfwPollEvents();
+    if (glfwGetError(nullptr) != GLFW_NO_ERROR) {
+        return false;
+    }
+
+    GLFWwindow* ctx = reinterpret_cast<GLFWwindow*>(win_);
+    for (int key = Mouse::kLeft; key < Mouse::kKeycodeCount; ++key) {
+        states_[key] = (glfwGetMouseButton(ctx, key) == GLFW_PRESS);
+    }
+
+    return true;
+}
+
+bool Mouse::isPressed(int keycode) {
+    if (keycode < 0 || keycode >= kKeycodeCount) {
+        return false;
+    }
+
+    return states_[keycode];
+}
+
+Vec2 Mouse::getAxis2D(int) {
+    GLFWwindow* ctx = reinterpret_cast<GLFWwindow*>(win_);
+    double x, y;
+    glfwGetCursorPos(ctx, &x, &y);
+
+    return Vec2(x, y);
+}

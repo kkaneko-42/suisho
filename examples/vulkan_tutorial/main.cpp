@@ -42,7 +42,13 @@ int main() {
     ScalingSystem scaling;
     scheduler.addSystem(scaling);
 
+    Mouse mouse(rendering.getWindowHandle());
     while (true) {
+        mouse.poll();
+        std::cout << "Left: " << mouse.isPressed(Mouse::kLeft) << std::endl;
+        std::cout << "Right: " << mouse.isPressed(Mouse::kRight) << std::endl;
+        std::cout << "Middle: " << mouse.isPressed(Mouse::kMiddle) << std::endl;
+        std::cout << "Pos: " << mouse.getAxis2D().x << ", " << mouse.getAxis2D().y << std::endl;
         scheduler.update(world);
     }
 

@@ -3,5 +3,6 @@
 
 #include "input/IInputDevice.h"
 #include "input/Keyboard.h"
+#include "input/Mouse.h"
 
 #endif // SUISHO_INPUT_H_
