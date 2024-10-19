@@ -10,6 +10,10 @@ const std::unordered_map<int, int> kKeycodeTable = {
     { Gamepad::kEast, GLFW_GAMEPAD_BUTTON_B },
     { Gamepad::kSouth, GLFW_GAMEPAD_BUTTON_A },
     { Gamepad::kWest, GLFW_GAMEPAD_BUTTON_X },
+    { Gamepad::kDpadUp, GLFW_GAMEPAD_BUTTON_DPAD_UP },
+    { Gamepad::kDpadRight, GLFW_GAMEPAD_BUTTON_DPAD_RIGHT },
+    { Gamepad::kDpadDown, GLFW_GAMEPAD_BUTTON_DPAD_DOWN },
+    { Gamepad::kDpadLeft, GLFW_GAMEPAD_BUTTON_DPAD_LEFT },
 };
 
 Gamepad::Gamepad(int id) : id_(id), state_(new GLFWgamepadstate())

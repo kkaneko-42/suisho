@@ -45,10 +45,10 @@ int main() {
     Gamepad pad(1);
     while (true) {
         pad.poll();
-        std::cout << "North: " << pad.isPressed(Gamepad::kNorth) << std::endl;
-        std::cout << "East: " << pad.isPressed(Gamepad::kEast) << std::endl;
-        std::cout << "South: " << pad.isPressed(Gamepad::kSouth) << std::endl;
-        std::cout << "West: " << pad.isPressed(Gamepad::kWest) << std::endl;
+        std::cout << "DpadUp: " << pad.isPressed(Gamepad::kDpadUp) << std::endl;
+        std::cout << "DpadRight: " << pad.isPressed(Gamepad::kDpadRight) << std::endl;
+        std::cout << "DpadDown: " << pad.isPressed(Gamepad::kDpadDown) << std::endl;
+        std::cout << "DpadLeft: " << pad.isPressed(Gamepad::kDpadLeft) << std::endl;
         scheduler.update(world);
     }
 
