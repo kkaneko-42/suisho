@@ -25,7 +25,7 @@ namespace suisho {
             kTriggerLeft,
             kTriggerRight,
             kStart,
-            kKeycodeCount,
+            kBack,
         };
 
         Gamepad(int device_id = -1);
