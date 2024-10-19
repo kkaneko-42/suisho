@@ -13,6 +13,7 @@ public:
     ~RenderingSystem();
 
     void update(Params& params) override;
+    void* getWindowHandle() { return renderer_.getWindowHandle(); } // FIXME
 
 private:
     // FIXME: Any system dosen't have any state basically

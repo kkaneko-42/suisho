@@ -28,6 +28,8 @@ public:
         onWindowResize.push_back(std::forward<F>(f));
     }
 
+    GLFWwindow* getWindowHandle() { return window; } // FIXME
+
     VkPhysicalDeviceProperties getProperties() const;
     const std::vector<VulkanImage>& getSwapchainImages() const { return swapChainImages; }
 

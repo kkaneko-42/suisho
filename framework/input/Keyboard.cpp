@@ -12,16 +12,12 @@ const std::unordered_map<int, int> kKeycodeTable = {
     { Keyboard::kArrowLeft, GLFW_KEY_LEFT },
 };
 
+Keyboard::Keyboard(void* win) : win_(win)
+{}
+
 bool Keyboard::poll() {
     // Get current context
-    GLFWwindow* ctx = glfwGetCurrentContext();
-    if (glfwGetError(nullptr) != GLFW_NO_ERROR) {
-        return false;
-    }
-    else if (ctx == nullptr) {
-        // No window's context is current
-        return true;
-    }
+    GLFWwindow* ctx = reinterpret_cast<GLFWwindow*>(win_);
 
     // Poll events
     glfwPollEvents();

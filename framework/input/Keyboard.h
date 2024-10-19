@@ -18,6 +18,7 @@ public:
         kArrowLeft,
     };
 
+    Keyboard(void* window); // FIXME
     bool poll() override;
     bool isPressed(int keycode) override;
 
@@ -26,6 +27,7 @@ public:
     }
 
 private:
+    void* win_;
     std::bitset<UCHAR_MAX> states_;
 };
 

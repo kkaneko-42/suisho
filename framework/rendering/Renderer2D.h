@@ -29,6 +29,7 @@ public:
     bool initialize();
     void terminate();
     bool shouldWindowClose() const; // FIXME
+    void* getWindowHandle() { return device_.getWindowHandle(); } // FIXME
     bool beginFrame();
     void endFrame();
 
