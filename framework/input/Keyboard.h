@@ -4,6 +4,7 @@
 #include "input/IInputDevice.h"
 #include <bitset>
 #include <stdexcept>
+#include <climits>
 
 namespace suisho {
 
