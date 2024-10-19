@@ -1,6 +1,7 @@
 #include "input/Mouse.h"
 #include <unordered_map>
 #include <GLFW/glfw3.h>
+#include <stdexcept>
 
 using namespace suisho;
 
@@ -23,7 +24,7 @@ bool Mouse::poll() {
 
 bool Mouse::isPressed(int keycode) {
     if (keycode < 0 || keycode >= kKeycodeCount) {
-        return false;
+        throw std::runtime_error(std::string("Mouse:: Invalid keycode ") + (char)(keycode + '0'));
     }
 
     return states_[keycode];
