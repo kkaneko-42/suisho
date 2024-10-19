@@ -4,5 +4,6 @@
 #include "core/core.h"
 #include "math/suisho_math.h"
 #include "rendering/rendering.h"
+#include "input/input.h"
 
 #endif // SUISHO_H_
