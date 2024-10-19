@@ -45,8 +45,8 @@ int main() {
     Gamepad pad(1);
     while (true) {
         pad.poll();
-        std::cout << "ShoulderLeft: " << pad.isPressed(Gamepad::kShoulderLeft) << std::endl;
-        std::cout << "ShoulderRight: " << pad.isPressed(Gamepad::kShoulderRight) << std::endl;
+        std::cout << "LeftStick: " << pad.isPressed(Gamepad::kLeftStick) << std::endl;
+        std::cout << "RightStick: " << pad.isPressed(Gamepad::kRightStick) << std::endl;
         scheduler.update(world);
     }
 

@@ -6,6 +6,8 @@
 using namespace suisho;
 
 const std::unordered_map<int, int> kKeycodeTable = {
+    { Gamepad::kLeftStick, GLFW_GAMEPAD_BUTTON_LEFT_THUMB },
+    { Gamepad::kRightStick, GLFW_GAMEPAD_BUTTON_RIGHT_THUMB },
     { Gamepad::kNorth, GLFW_GAMEPAD_BUTTON_Y },
     { Gamepad::kEast, GLFW_GAMEPAD_BUTTON_B },
     { Gamepad::kSouth, GLFW_GAMEPAD_BUTTON_A },
@@ -28,7 +30,7 @@ bool Gamepad::poll() {
 }
 
 bool Gamepad::isPressed(int keycode) {
-    if (keycode < 0 || keycode >= kKeycodeCount) {
+    if (kKeycodeTable.count(keycode) == 0) {
         throw std::runtime_error("Gamepad: Invalid keycode " + keycode);
     }
 
