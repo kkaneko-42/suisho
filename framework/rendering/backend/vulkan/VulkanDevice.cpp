@@ -96,7 +96,6 @@ void VulkanDevice::initWindow() {
     window = glfwCreateWindow(kWindowWidth, kWindowHeight, "Suisho Engine", nullptr, nullptr);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, onGlfwWindowResized);
-    glfwMakeContextCurrent(window);
 }
 
 VulkanImage VulkanDevice::createImage(
