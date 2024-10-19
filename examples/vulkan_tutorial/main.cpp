@@ -45,8 +45,10 @@ int main() {
     Gamepad pad(1);
     while (true) {
         pad.poll();
-        std::cout << "Left: " << pad.getAxis2D(Gamepad::kLeftStick).x << ", " << pad.getAxis2D(Gamepad::kLeftStick).y << std::endl;
-        std::cout << "Right: " << pad.getAxis2D(Gamepad::kRightStick).x << ", " << pad.getAxis2D(Gamepad::kRightStick).y << std::endl;
+        std::cout << "North: " << pad.isPressed(Gamepad::kNorth) << std::endl;
+        std::cout << "East: " << pad.isPressed(Gamepad::kEast) << std::endl;
+        std::cout << "South: " << pad.isPressed(Gamepad::kSouth) << std::endl;
+        std::cout << "West: " << pad.isPressed(Gamepad::kWest) << std::endl;
         scheduler.update(world);
     }
 

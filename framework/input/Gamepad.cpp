@@ -5,6 +5,13 @@
 
 using namespace suisho;
 
+const std::unordered_map<int, int> kKeycodeTable = {
+    { Gamepad::kNorth, GLFW_GAMEPAD_BUTTON_Y },
+    { Gamepad::kEast, GLFW_GAMEPAD_BUTTON_B },
+    { Gamepad::kSouth, GLFW_GAMEPAD_BUTTON_A },
+    { Gamepad::kWest, GLFW_GAMEPAD_BUTTON_X },
+};
+
 Gamepad::Gamepad(int id) : id_(id), state_(new GLFWgamepadstate())
 {}
 
@@ -15,7 +22,11 @@ bool Gamepad::poll() {
 }
 
 bool Gamepad::isPressed(int keycode) {
-    return true;
+    if (keycode < 0 || keycode >= kKeycodeCount) {
+        throw std::runtime_error("Gamepad: Invalid keycode " + keycode);
+    }
+
+    return state_->buttons[kKeycodeTable.at(keycode)];
 }
 
 Vec2 Gamepad::getAxis2D(int keycode) {

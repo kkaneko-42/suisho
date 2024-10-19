@@ -12,6 +12,20 @@ namespace suisho {
         enum Keycode {
             kLeftStick,
             kRightStick,
+            kNorth,
+            kEast,
+            kSouth,
+            kWest,
+            kDpadUp,
+            kDpadRight,
+            kDpadDown,
+            kDpadLeft,
+            kShoulderLeft,
+            kShoulderRight,
+            kTriggerLeft,
+            kTriggerRight,
+            kStart,
+            kKeycodeCount,
         };
 
         Gamepad(int device_id = -1);
