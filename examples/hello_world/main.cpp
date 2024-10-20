@@ -1,25 +1,41 @@
 ﻿#include "suisho.h"
 #include <iostream>
 #include <chrono>
+#define USE_GAMEPAD 0
 
 using namespace suisho;
 
-class GamepadControllSystem : public ISystem<std::tuple<Transform>> {
+class ControllSystem : public ISystem<std::tuple<Transform>> {
 public:
-    GamepadControllSystem() : pad_(0) {}
+#if USE_GAMEPAD
+    ControllSystem() : pad_(0) {}
+#else
+    ControllSystem(void* win) : keyboard_(win) {}
+#endif
 
     void update(Params& params) {
+#if USE_GAMEPAD
         pad_.poll();
         const Vec2 xlate = pad_.getAxis2D(Gamepad::kLeftStick);
-        const float scale = (pad_.getAxis1D(Gamepad::kTriggerRight) + 1.0f) / 2.0f;
-        params.query.forEach([this, &xlate, &scale](Transform& xform) {
+#else
+        keyboard_.poll();
+        const Vec2 xlate = Vec2(
+            keyboard_.isPressed(Keyboard::kArrowRight) - keyboard_.isPressed(Keyboard::kArrowLeft),
+            keyboard_.isPressed(Keyboard::kArrowUp) - keyboard_.isPressed(Keyboard::kArrowDown)
+        );
+#endif
+
+        params.query.forEach([this, &xlate](Transform& xform) {
             xform.position += Vec3(xlate.x, xlate.y, 0.0f) * 1e-3;
-            xform.scale = Vec3(scale, scale, 1.0f);
         });
     }
 
 private:
+#if USE_GAMEPAD
     Gamepad pad_;
+#else
+    Keyboard keyboard_;
+#endif
 };
 
 static World createWorld() {
@@ -46,7 +62,7 @@ int main() {
     RenderingSystem rendering;
     scheduler.addSystem(rendering);
 
-    GamepadControllSystem control;
+    ControllSystem control(rendering.getWindowHandle());
     scheduler.addSystem(control);
 
     while (true) {
