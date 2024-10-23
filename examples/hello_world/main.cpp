@@ -1,7 +1,7 @@
 ﻿#include "suisho.h"
 #include <iostream>
 #include <chrono>
-#define USE_GAMEPAD 0
+#define USE_GAMEPAD 1
 
 using namespace suisho;
 
@@ -62,7 +62,11 @@ int main() {
     RenderingSystem rendering;
     scheduler.addSystem(rendering);
 
+#if USE_GAMEPAD
+    ControllSystem control;
+#else
     ControllSystem control(rendering.getWindowHandle());
+#endif
     scheduler.addSystem(control);
 
     while (true) {
