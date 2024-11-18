@@ -27,6 +27,7 @@ public:
     void setViewport(const VkViewport& viewport);
     void setScissor(const VkRect2D& scissor);
     void bindGraphicsPipeline(VkPipeline pipeline);
+    void bindVertexBuffer(VkBuffer vertex);
     void bindBindingSet(uint32_t index, VkDescriptorSet set, VkPipelineLayout layout);
     void bindBindingSetDynamic(uint32_t index, uint32_t offset, VkDescriptorSet set, VkPipelineLayout layout);
 

@@ -62,7 +62,12 @@ bool Renderer2D::initialize() {
     render_pass_ = device_.createRenderPass();
     VkShaderModule vert = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/quad.vert.spv"));
     VkShaderModule frag = device_.createShaderModule(readBinary(SUISHO_BUILTIN_ASSETS_DIR"/shaders/quad.frag.spv"));
-    pipeline_ = device_.createGraphicsPipeline(vert, frag, { global_layout_.layout, material_layout_.layout, object_layout_.layout }, render_pass_, pipeline_layout_);
+    pipeline_ = device_.createGraphicsPipeline(
+        vert, frag,
+        VertexFormat::kNone,
+        { global_layout_.layout, material_layout_.layout, object_layout_.layout },
+        render_pass_, pipeline_layout_
+    );
     device_.destroyShaderModule(vert);
     device_.destroyShaderModule(frag);
 

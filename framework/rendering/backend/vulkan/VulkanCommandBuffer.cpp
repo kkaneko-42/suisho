@@ -53,6 +53,11 @@ void VulkanCommandBuffer::bindGraphicsPipeline(VkPipeline pipeline) {
     vkCmdBindPipeline(cmd_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 }
 
+void VulkanCommandBuffer::bindVertexBuffer(VkBuffer vertex) {
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(cmd_, 0, 1, &vertex, offsets);
+}
+
 void VulkanCommandBuffer::bindBindingSet(uint32_t index, VkDescriptorSet set, VkPipelineLayout layout) {
     vkCmdBindDescriptorSets(
         cmd_,

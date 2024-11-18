@@ -276,8 +276,37 @@ void VulkanDevice::destroyRenderPass(VkRenderPass pass) {
     vkDestroyRenderPass(device, pass, nullptr);
 }
 
+static void createVertexInputState(VertexFormat format, VkVertexInputBindingDescription& binding, std::vector<VkVertexInputAttributeDescription>& attrs) {
+    const std::vector<std::pair<VkFormat, size_t>> kFormatInfo = {
+        /* kPosition */ { VK_FORMAT_R32G32B32_SFLOAT, 12 },
+        /* kNormal */ { VK_FORMAT_R32G32B32_SFLOAT, 12 },
+        /* kTexCoord2D */ { VK_FORMAT_R32G32_SFLOAT, 8 }
+    };
+
+    attrs.clear();
+    uint32_t cumulative_size = 0;
+    for (size_t i = 0; i < kFormatInfo.size(); ++i) {
+        const VertexFormat checked = static_cast<VertexFormat>(1 << i);
+        if ((format & checked) == checked) {
+            VkVertexInputAttributeDescription desc{};
+            desc.binding = 0;
+            desc.location = static_cast<uint32_t>(attrs.size()); // Tail position
+            desc.format = kFormatInfo[i].first;
+            desc.offset = cumulative_size;
+
+            attrs.push_back(desc);
+            cumulative_size += kFormatInfo[i].second;
+        }
+    }
+
+    binding.binding = 0;
+    binding.stride = cumulative_size;
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+}
+
 VkPipeline VulkanDevice::createGraphicsPipeline(
     VkShaderModule vert, VkShaderModule frag,
+    VertexFormat vertex_format,
     const std::vector<VkDescriptorSetLayout>& binding_layouts,
     VkRenderPass pass,
     VkPipelineLayout& out_layout
@@ -296,10 +325,16 @@ VkPipeline VulkanDevice::createGraphicsPipeline(
 
     VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
+    VkVertexInputBindingDescription vertexBinding{};
+    std::vector<VkVertexInputAttributeDescription> vertexAttrs;
+    createVertexInputState(vertex_format, vertexBinding, vertexAttrs);
+
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
+    vertexInputInfo.vertexBindingDescriptionCount = (vertex_format != VertexFormat::kNone);
+    vertexInputInfo.pVertexBindingDescriptions = &vertexBinding;
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttrs.size());
+    vertexInputInfo.pVertexAttributeDescriptions = vertexAttrs.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

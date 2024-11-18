@@ -10,6 +10,7 @@
 #include "rendering/backend/vulkan/VulkanTexture.h"
 #include "rendering/backend/vulkan/VulkanBuffer.h"
 #include "rendering/backend/vulkan/VulkanBindingLayout.h"
+#include "rendering/VertexFormat.h"
 
 namespace suisho::backend {
 
@@ -63,6 +64,7 @@ public:
 
     VkPipeline createGraphicsPipeline(
         VkShaderModule vert, VkShaderModule frag,
+        VertexFormat vertex_format,
         const std::vector<VkDescriptorSetLayout>& binding_layouts,
         VkRenderPass pass,
         VkPipelineLayout& out_layout
