@@ -28,11 +28,14 @@ public:
     void setScissor(const VkRect2D& scissor);
     void bindGraphicsPipeline(VkPipeline pipeline);
     void bindVertexBuffer(VkBuffer vertex);
+    void bindIndexBuffer(VkBuffer index);
     void bindBindingSet(uint32_t index, VkDescriptorSet set, VkPipelineLayout layout);
     void bindBindingSetDynamic(uint32_t index, uint32_t offset, VkDescriptorSet set, VkPipelineLayout layout);
 
     void draw(uint32_t vertex_count);
     void drawInstanced(uint32_t vertex_count, uint32_t instance_count);
+    void drawIndexed(uint32_t index_count);
+    void drawIndexedInstanced(uint32_t index_count, uint32_t instance_count);
 
 private:
     VkCommandBuffer cmd_;

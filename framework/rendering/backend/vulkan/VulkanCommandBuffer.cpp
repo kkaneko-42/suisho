@@ -58,6 +58,10 @@ void VulkanCommandBuffer::bindVertexBuffer(VkBuffer vertex) {
     vkCmdBindVertexBuffers(cmd_, 0, 1, &vertex, offsets);
 }
 
+void VulkanCommandBuffer::bindIndexBuffer(VkBuffer index) {
+    vkCmdBindIndexBuffer(cmd_, index, 0, VK_INDEX_TYPE_UINT32);
+}
+
 void VulkanCommandBuffer::bindBindingSet(uint32_t index, VkDescriptorSet set, VkPipelineLayout layout) {
     vkCmdBindDescriptorSets(
         cmd_,
@@ -82,4 +86,12 @@ void VulkanCommandBuffer::draw(uint32_t vertex_count) {
 
 void VulkanCommandBuffer::drawInstanced(uint32_t vertex_count, uint32_t instance_count) {
     vkCmdDraw(cmd_, vertex_count, instance_count, 0, 0);
+}
+
+void VulkanCommandBuffer::drawIndexed(uint32_t index_count) {
+    vkCmdDrawIndexed(cmd_, index_count, 1, 0, 0, 0);
+}
+
+void VulkanCommandBuffer::drawIndexedInstanced(uint32_t index_count, uint32_t instance_count) {
+    vkCmdDrawIndexed(cmd_, index_count, instance_count, 0, 0, 0);
 }
