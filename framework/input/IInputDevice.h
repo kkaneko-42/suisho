@@ -11,7 +11,10 @@ public:
     virtual ~IInputDevice() {}
 
     virtual bool poll() = 0;
-    virtual bool isPressed(int keycode) = 0;
+
+    virtual bool isPressed(int keycode) {
+        throw std::logic_error("No button-like controls");
+    }
 
     virtual float getAxis1D(int keycode) {
         throw std::logic_error("No 1D-axial controls");
