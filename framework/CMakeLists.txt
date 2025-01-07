@@ -13,6 +13,12 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
+    cereal
+    GIT_REPOSITORY https://github.com/USCiLab/cereal
+    GIT_TAG v1.3.2
+)
+
+FetchContent_Declare(
     freetype
     GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype
     GIT_TAG VER-2-13-3
@@ -27,7 +33,7 @@ if (WIN32)
 	)
 	FetchContent_MakeAvailable(entt freetype glfw)
 else()
-	FetchContent_MakeAvailable(entt freetype)
+	FetchContent_MakeAvailable(entt cereal freetype)
 endif (WIN32)
 
 # Gather engine sources
