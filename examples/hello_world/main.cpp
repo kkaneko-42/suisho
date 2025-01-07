@@ -1,7 +1,7 @@
 ﻿#include "suisho.h"
 #include <iostream>
 #include <chrono>
-#define USE_GAMEPAD 1
+#define USE_GAMEPAD 0
 
 using namespace suisho;
 

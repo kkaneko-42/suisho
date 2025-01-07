@@ -28,7 +28,7 @@ namespace suisho {
             kBack,
         };
 
-        Gamepad(int device_id = -1);
+        Gamepad(int device_id);
 
         bool poll() override;
         bool isPressed(int keycode) override;
