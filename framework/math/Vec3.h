@@ -1,6 +1,8 @@
 #ifndef SUISHO_MATH_VEC3_H_
 #define SUISHO_MATH_VEC3_H_
 
+#include "core/macros.h"
+
 namespace suisho {
 
 /**
@@ -127,6 +129,7 @@ public:
 /// @return Vector multiplying s to each element of this
 inline Vec3 operator*(float s, const Vec3& v) { return v * s; }
 
+SUISHO_SERIALIZE(Vec3, x, y, z);
 
 } // namespace suisho
 

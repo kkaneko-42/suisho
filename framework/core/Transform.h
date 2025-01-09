@@ -3,6 +3,7 @@
 
 #include "math/Vec3.h"
 #include "math/Mat4.h"
+#include "core/macros.h"
 
 namespace suisho {
 
@@ -25,6 +26,8 @@ struct Transform {
     /// @return The matrix
     Mat4 toMatrix() const;
 };
+
+SUISHO_COMPONENT(Transform, position, scale)
 
 } // namespace suisho
 

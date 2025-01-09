@@ -1,5 +1,6 @@
 ﻿#include "suisho.h"
 #include <iostream>
+#include <sstream>
 #include <chrono>
 #define USE_GAMEPAD 0
 
@@ -52,6 +53,8 @@ static World createWorld() {
         }
     }
 
+    WorldSerializer saver(world);
+    saver.serialize(std::cout); // TEST
     return world;
 }
 

@@ -119,6 +119,8 @@ public:
     }
 
 private:
+    friend class WorldSerializer;
+
     entt::registry reg_;
 };
 
