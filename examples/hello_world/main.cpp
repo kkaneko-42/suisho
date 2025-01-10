@@ -56,22 +56,19 @@ static World createWorld() {
             }
         }
 
-        std::ofstream out("src.scene");
         WorldSerializer saver(world);
-        saver.serialize(out); // TEST
+        saver.serialize("src.scene"); // TEST
     }
 
     World dst;
     {
-        std::ifstream in("src.scene");
         WorldSerializer loader(dst);
-        loader.deserialize(in); // TEST
+        loader.deserialize("src.scene"); // TEST
     }
 
     {
-        std::ofstream out("dst.scene");
         WorldSerializer saver(dst);
-        saver.serialize(out); // TEST
+        saver.serialize("dst.scene"); // TEST
     }
 
     return dst;

@@ -3,7 +3,6 @@
 
 #include "core/World.h"
 #include <cereal/archives/json.hpp>
-#include <iostream>
 #include <functional>
 
 namespace suisho {
@@ -21,14 +20,13 @@ public:
             T data;
             archive(cereal::make_nvp(name, data));
             dst.addComponent<T>(e, data);
-            std::cout << "loaded: " << data.position.x << std::endl;
         };
 
         return is_created;
     }
 
-    void serialize(std::ostream& dst) const;
-    void deserialize(std::istream& src);
+    void serialize(const std::string& dst_path) const;
+    void deserialize(const std::string& src_path);
 
 private:
     World& target_;

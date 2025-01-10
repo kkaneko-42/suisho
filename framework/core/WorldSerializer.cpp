@@ -1,5 +1,5 @@
 #include "core/WorldSerializer.h"
-#include "core/Transform.h"
+#include <fstream>
 #include <cereal/cereal.hpp>
 #include <cereal/archives/json.hpp>
 
@@ -8,22 +8,30 @@ using namespace suisho;
 WorldSerializer::WorldSerializer(World& target)
 : target_(target) {}
 
-void WorldSerializer::serialize(std::ostream& dst) const {
-    const auto& reg = target_.reg_;
-    cereal::JSONOutputArchive archive(dst);
+void WorldSerializer::serialize(const std::string& dst_path) const {
+    // Open the file
+    std::ofstream ofs(dst_path);
+    if (!ofs) {
+        throw std::runtime_error("WorldSerializer: Failed to open " + dst_path);
+    }
 
+    cereal::JSONOutputArchive archive(ofs);
+    const auto& reg = target_.reg_;
+    // Collect entities
+    // NOTE: Reverse ordering required
     std::stack<entt::entity> entities;
     for (auto e : reg.view<entt::entity>()) {
         entities.push(e);
     }
 
+    // Serialize entities
     archive.setNextName("entities");
     archive.startNode();
     archive.makeArray();
     while (!entities.empty()) {
         // Serialize the entity
         entt::entity e = entities.top();
-        archive.startNode();
+        archive.startNode(); // Begin entity section
         // Serialize the components attached to the e
         for (auto&& [id, pool] : reg.storage()) {
             if (pool.contains(e)) {
@@ -37,14 +45,20 @@ void WorldSerializer::serialize(std::ostream& dst) const {
                 getSavers().at(id)(archive, pool.value(e));
             }
         }
-        archive.finishNode();
+        archive.finishNode(); // End entity section
         entities.pop();
     }
     archive.finishNode(); // End "entities" section
 }
 
-void WorldSerializer::deserialize(std::istream& src) {
-    cereal::JSONInputArchive archive(src);
+void WorldSerializer::deserialize(const std::string& src_path) {
+    // Open the file
+    std::ifstream ifs(src_path);
+    if (!ifs) {
+        throw std::runtime_error("WorldSerializer: Failed to open " + src_path);
+    }
+
+    cereal::JSONInputArchive archive(ifs);
     archive.startNode(); // Begin "entities" section
     while (true) {
         // Begin entity section
@@ -55,6 +69,7 @@ void WorldSerializer::deserialize(std::istream& src) {
             break;
         }
 
+        // Deserialize the components attached
         Entity e = target_.createEntity();
         while (archive.getNodeName() != nullptr) {
             getLoaders().at(archive.getNodeName())(archive, target_, e);
