@@ -1,6 +1,7 @@
 ﻿#include "suisho.h"
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <chrono>
 #define USE_GAMEPAD 0
 
@@ -40,22 +41,40 @@ private:
 };
 
 static World createWorld() {
-    World world;
+    std::stringstream ss;
+    {
+        World world;
 
-    const float scale = 0.2f;
-    const int objects_count_x = 8;
-    const int objects_count_y = 8;
-    for (int y = -objects_count_y / 2; y < objects_count_y / 2; ++y) {
-        for (int x = -objects_count_x / 2; x < objects_count_x / 2; ++x) {
-            auto e = world.createEntity();
-            const Vec3 pos = (scale + 0.01f) * Vec3(x, y, 0.0f);
-            world.addComponent<Transform>(e, pos, scale * Vec3::kOne);
+        const float scale = 0.2f;
+        const int objects_count_x = 8;
+        const int objects_count_y = 8;
+        for (int y = -objects_count_y / 2; y < objects_count_y / 2; ++y) {
+            for (int x = -objects_count_x / 2; x < objects_count_x / 2; ++x) {
+                auto e = world.createEntity();
+                const Vec3 pos = (scale + 0.01f) * Vec3(x, y, 0.0f);
+                world.addComponent<Transform>(e, pos, scale * Vec3::kOne);
+            }
         }
+
+        std::ofstream out("src.scene");
+        WorldSerializer saver(world);
+        saver.serialize(out); // TEST
     }
 
-    WorldSerializer saver(world);
-    saver.serialize(std::cout); // TEST
-    return world;
+    World dst;
+    {
+        std::ifstream in("src.scene");
+        WorldSerializer loader(dst);
+        loader.deserialize(in); // TEST
+    }
+
+    {
+        std::ofstream out("dst.scene");
+        WorldSerializer saver(dst);
+        saver.serialize(out); // TEST
+    }
+
+    return dst;
 }
 
 int main() {
