@@ -58,6 +58,7 @@ void WorldSerializer::deserialize(const std::string& src_path) {
         throw std::runtime_error("WorldSerializer: Failed to open " + src_path);
     }
 
+    target_.clear();
     cereal::JSONInputArchive archive(ifs);
     archive.startNode(); // Begin "entities" section
     while (true) {

@@ -13,6 +13,12 @@ using Entity = entt::entity;
 class World {
 public:
     /**
+     * @brief Erase all entities and components
+     * 
+     */
+    void clear();
+
+    /**
      * @brief Create a new Entity and add to this world
      *
      * @return Added eneity

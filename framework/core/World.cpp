@@ -3,6 +3,10 @@
 
 using namespace suisho;
 
+void World::clear() {
+    reg_.clear();
+}
+
 Entity World::createEntity() {
     return reg_.create();
 }
