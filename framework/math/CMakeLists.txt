@@ -4,4 +4,5 @@ set(SUISHO_MATH_SRCS
     math/Vec3.cpp
     math/Vec2.cpp
     math/Mat4.cpp
+    math/Quat.cpp
 )

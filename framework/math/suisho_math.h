@@ -7,5 +7,6 @@
 #include "math/Vec3.h"
 #include "math/Vec2.h"
 #include "math/Mat4.h"
+#include "math/Quat.h"
 
 #endif // SUISHO_MATH_H_
