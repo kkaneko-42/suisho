@@ -75,7 +75,7 @@ static World createWorld() {
 }
 
 int main() {
-    World world = createWorld();
+    SceneManager::activate(createWorld());
     SystemScheduler scheduler;
 
     RenderingSystem rendering;
@@ -89,7 +89,7 @@ int main() {
     scheduler.addSystem(control);
 
     while (true) {
-        scheduler.update(world);
+        scheduler.update(SceneManager::current());
     }
 
     return EXIT_SUCCESS;

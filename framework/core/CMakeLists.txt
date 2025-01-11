@@ -6,4 +6,5 @@ set(SUISHO_CORE_SRCS
     core/exceptions.cpp
     core/Transform.cpp
     core/WorldSerializer.cpp
+    core/SceneManager.cpp
 )

@@ -9,5 +9,6 @@
 #include "core/ISystem.h"
 #include "core/SystemScheduler.h"
 #include "core/WorldSerializer.h"
+#include "core/SceneManager.h"
 
 #endif // SUISHO_CORE_H_
