@@ -1,6 +1,8 @@
 #ifndef SUISHO_MATH_QUAT_H_
 #define SUISHO_MATH_QUAT_H_
 
+#include "core/macros.h"
+
 namespace suisho {
 
 class Vec3;
@@ -15,7 +17,7 @@ public:
     /**
      * @brief Identity quaternion.
      */
-    static Quat kIdentity;
+    static const Quat kIdentity;
 
     float x; ///< The x component of the quaternion.
     float y; ///< The y component of the quaternion.
@@ -145,6 +147,8 @@ public:
      */
     static Quat slerp(const Quat& a, const Quat& b, float t);
 };
+
+SUISHO_SERIALIZE(Quat, x, y, z, w)
 
 }; // namespace suisho
 

@@ -52,7 +52,7 @@ static World createWorld() {
             for (int x = -objects_count_x / 2; x < objects_count_x / 2; ++x) {
                 auto e = world.createEntity();
                 const Vec3 pos = (scale + 0.01f) * Vec3(x, y, 0.0f);
-                world.addComponent<Transform>(e, pos, scale * Vec3::kOne);
+                world.addComponent<Transform>(e, pos, Quat::kIdentity, scale * Vec3::kOne);
             }
         }
 

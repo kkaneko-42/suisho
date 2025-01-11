@@ -5,9 +5,9 @@
 
 using namespace suisho;
 
-Quat Quat::kIdentity(0.0f, 0.0f, 0.0f, 1.0f);
+const Quat Quat::kIdentity(0.0f, 0.0f, 0.0f, 1.0f);
 
-Quat::Quat() : Quat(kIdentity) {}
+Quat::Quat() : x(0.0f), y(0.0f), z(0.0f), w(1.0f) {}
 
 Quat::Quat(float xx, float yy, float zz, float ww)
 : x(xx), y(yy), z(zz), w(ww) {}

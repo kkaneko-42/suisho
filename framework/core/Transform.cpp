@@ -2,7 +2,8 @@
 
 using namespace suisho;
 
-Transform::Transform(const Vec3& pos, const Vec3& scl) : position(pos), scale(scl) {}
+Transform::Transform(const Vec3& pos, const Quat& rot, const Vec3& scl)
+: position(pos), rotation(rot), scale(scl) {}
 
 Mat4 Transform::toMatrix() const {
     return Mat4::translate(position) * Mat4::scale(scale);
