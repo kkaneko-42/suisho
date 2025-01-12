@@ -7,6 +7,7 @@ namespace suisho {
 
 class Vec3;
 class Vec4;
+class Quat;
 
 /**
  * @brief Matrix 4x4
@@ -74,6 +75,14 @@ public:
      * @return Created matrix
      */
     static Mat4 translate(const Vec3& xlate);
+
+    /**
+     * @brief Create a rotation matrix
+     * 
+     * @param q Rotation quaternion
+     * @return The rotation matrix
+     */
+    static Mat4 rotate(const Quat& q);
 
     /**
      * @brief Create a rotation matrix

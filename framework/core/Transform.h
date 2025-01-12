@@ -27,7 +27,6 @@ struct Transform {
 
     /// @brief Create the 3D affine transform matrix
     /// @return The matrix
-    /// @todo Consider rotation
     Mat4 toMatrix() const;
 };
 

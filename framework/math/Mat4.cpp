@@ -1,6 +1,7 @@
 #include "math/Mat4.h"
 #include "math/Vec3.h"
 #include "math/Vec4.h"
+#include "math/Quat.h"
 #include "core/exceptions.h"
 #include <cmath>
 
@@ -69,6 +70,25 @@ Mat4 Mat4::translate(const Vec3& xlate) {
         1.0f, 0.0f, 0.0f, xlate.x,
         0.0f, 1.0f, 0.0f, xlate.y,
         0.0f, 0.0f, 1.0f, xlate.z,
+        0.0f, 0.0f, 0.0f, 1.0f
+    );
+}
+
+Mat4 Mat4::rotate(const Quat& q) {
+    const float xx = q.x * q.x;
+    const float yy = q.y * q.y;
+    const float zz = q.z * q.z;
+    const float xy = q.x * q.y;
+    const float xz = q.x * q.z;
+    const float yz = q.y * q.z;
+    const float xw = q.w * q.x;
+    const float yw = q.w * q.y;
+    const float zw = q.w * q.z;
+
+    return Mat4(
+        1 - 2*(yy - zz), 2*(xy - zw), 2*(xz + yw), 0.0f,
+        2*(xy + zw), 1 - 2*(xx + zz), 2*(yz - xw), 0.0f,
+        2*(xz - yw), 2*(yz + xw), 1 - 2*(xx - yy), 0.0f,
         0.0f, 0.0f, 0.0f, 1.0f
     );
 }
