@@ -7,7 +7,9 @@
 
 using namespace suisho;
 
-class ControllSystem : public ISystem<std::tuple<Transform>> {
+struct IsCenter {};
+
+class ControllSystem : public ISystem<std::tuple<Transform>, std::tuple<IsCenter>> {
 public:
 #if USE_GAMEPAD
     ControllSystem() : pad_(0) {}
@@ -43,36 +45,23 @@ private:
 
 static World createWorld() {
     std::stringstream ss;
-    {
-        World world;
 
-        const float scale = 0.2f;
-        const int objects_count_x = 8;
-        const int objects_count_y = 8;
-        for (int y = -objects_count_y / 2; y < objects_count_y / 2; ++y) {
-            for (int x = -objects_count_x / 2; x < objects_count_x / 2; ++x) {
-                auto e = world.createEntity();
-                const Vec3 pos = (scale + 0.01f) * Vec3(x, y, 0.0f);
-                world.addComponent<Transform>(e, pos, Quat::angleAxis(45.0f, Vec3::kBack), scale * Vec3::kOne);
+    World world;
+    const float scale = 0.2f;
+    const int objects_count_x = 8;
+    const int objects_count_y = 8;
+    for (int y = -objects_count_y / 2; y < objects_count_y / 2; ++y) {
+        for (int x = -objects_count_x / 2; x < objects_count_x / 2; ++x) {
+            auto e = world.createEntity();
+            const Vec3 pos = (scale + 0.01f) * Vec3(x, y, 0.0f);
+            world.addComponent<Transform>(e, pos, Quat::kIdentity, scale * Vec3::kOne);
+            if (y == 0 && x == 0) {
+                world.addComponent<IsCenter>(e);
             }
         }
-
-        WorldSerializer saver(world);
-        saver.serialize("src.scene"); // TEST
     }
 
-    World dst;
-    {
-        WorldSerializer loader(dst);
-        loader.deserialize("src.scene"); // TEST
-    }
-
-    {
-        WorldSerializer saver(dst);
-        saver.serialize("dst.scene"); // TEST
-    }
-
-    return dst;
+    return world;
 }
 
 int main() {

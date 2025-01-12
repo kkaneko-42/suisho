@@ -20,7 +20,7 @@ private:
 
     template <class F, size_t... I>
     void forEachImpl(F&& f, std::index_sequence<I...>) {
-        world_.iter<std::tuple_element_t<I, With>...>(std::forward<F>(f));
+        world_.iter<std::tuple_element_t<I, With>...>(std::forward<F>(f), Without());
     }
 };
 
