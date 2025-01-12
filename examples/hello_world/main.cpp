@@ -29,7 +29,7 @@ public:
 
         params.query.forEach([this, &xlate](Transform& xform) {
             xform.position += Vec3(xlate.x, xlate.y, 0.0f) * 1e-2;
-            xform.rotation *= Quat::angleAxis(1e-2, Vec3::kForward);
+            xform.rotation *= Quat::angleAxis(1e-2, Vec3::kBack);
         });
     }
 
@@ -53,7 +53,7 @@ static World createWorld() {
             for (int x = -objects_count_x / 2; x < objects_count_x / 2; ++x) {
                 auto e = world.createEntity();
                 const Vec3 pos = (scale + 0.01f) * Vec3(x, y, 0.0f);
-                world.addComponent<Transform>(e, pos, Quat::kIdentity, scale * Vec3::kOne);
+                world.addComponent<Transform>(e, pos, Quat::angleAxis(45.0f, Vec3::kBack), scale * Vec3::kOne);
             }
         }
 
