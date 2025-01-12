@@ -86,9 +86,9 @@ Mat4 Mat4::rotate(const Quat& q) {
     const float zw = q.w * q.z;
 
     return Mat4(
-        1 - 2*(yy - zz), 2*(xy - zw), 2*(xz + yw), 0.0f,
+        1 - 2*(yy + zz), 2*(xy - zw), 2*(xz + yw), 0.0f,
         2*(xy + zw), 1 - 2*(xx + zz), 2*(yz - xw), 0.0f,
-        2*(xz - yw), 2*(yz + xw), 1 - 2*(xx - yy), 0.0f,
+        2*(xz - yw), 2*(yz + xw), 1 - 2*(xx + yy), 0.0f,
         0.0f, 0.0f, 0.0f, 1.0f
     );
 }

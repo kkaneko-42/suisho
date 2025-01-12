@@ -28,7 +28,8 @@ public:
 #endif
 
         params.query.forEach([this, &xlate](Transform& xform) {
-            xform.position += Vec3(xlate.x, xlate.y, 0.0f) * 1e-3;
+            xform.position += Vec3(xlate.x, xlate.y, 0.0f) * 1e-2;
+            xform.rotation *= Quat::angleAxis(1e-2, Vec3::kForward);
         });
     }
 

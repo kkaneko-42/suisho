@@ -1,7 +1,9 @@
 #include "math/Quat.h"
 #include "math/Vec3.h"
-#include <utility>
 #include "core/exceptions.h"
+#include <utility>
+#include <cmath>
+
 
 using namespace suisho;
 
@@ -43,11 +45,17 @@ Quat& Quat::operator=(Quat&& q) {
 }
 
 Quat Quat::operator*(const Quat& q) const {
-    throw NotImplementedException("Quat * Quat");
+    return Quat(
+        w*q.x - z*q.y + y*q.z + x*q.w,
+        z*q.x + w*q.y - x*q.z + y*q.w,
+       -y*q.x + x*q.y + w*q.z + z*q.w,
+       -x*q.x - y*q.y - z*q.z + w*q.w 
+    );
 }
 
 Quat& Quat::operator*=(const Quat& q) {
-    throw NotImplementedException("Quat * Quat");
+    // FIXME: Performance concern
+    *this = *this * q;
     return *this;
 }
 
@@ -76,8 +84,14 @@ Quat Quat::fromEuler(const Vec3& degree) {
 }
 
 Quat Quat::angleAxis(float degree, const Vec3& axis) {
-    throw NotImplementedException("Quat::angleAxis");
-    return Quat();
+    const float angle_half = degree / 2.0f;
+    const float s = std::sin(angle_half);
+    return Quat(
+        axis.x * s,
+        axis.y * s,
+        axis.z * s,
+        std::cos(angle_half)
+    );
 }
 
 Quat Quat::lerp(const Quat& a, const Quat& b, float t) {

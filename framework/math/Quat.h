@@ -121,7 +121,7 @@ public:
     /**
      * @brief Creates a quaternion representing a rotation around an axis.
      * @param degree The angle of rotation in degrees.
-     * @param axis The axis of rotation.
+     * @param axis The axis of rotation(normalized).
      * @return The resulting quaternion.
      * @todo impl
      */
