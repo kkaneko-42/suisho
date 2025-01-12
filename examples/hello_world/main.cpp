@@ -9,7 +9,7 @@ using namespace suisho;
 
 struct IsCenter {};
 
-class ControllSystem : public ISystem<std::tuple<Transform>, std::tuple<IsCenter>> {
+class ControllSystem : public ISystem<Transform> {
 public:
 #if USE_GAMEPAD
     ControllSystem() : pad_(0) {}

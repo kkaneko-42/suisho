@@ -7,7 +7,7 @@
 
 namespace suisho {
 
-class RenderingSystem : public ISystem<std::tuple<const Transform>> {
+class RenderingSystem : public ISystem<const Transform> {
 public:
     RenderingSystem();
     ~RenderingSystem();

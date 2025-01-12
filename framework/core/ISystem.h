@@ -9,17 +9,18 @@ namespace suisho {
 /**
  * @brief System interface
  * 
- * @tparam With Component types tuple iterated by the system
- * @tparam Without Component types tuple excluded the iterating
+ * @tparam T Iterated component type
+ * @tparam S Other iterated component types
+ * 
  */
-template <class With, class Without = std::tuple<>>
+template <class T, class... S>
 struct ISystem {
     /**
      * @brief Interface to the world
      */
     struct Params {
         EntityCommandBuffer commands;
-        Query<With, Without> query;
+        Query<std::tuple<T, S...>> query;
     };
 
     /**

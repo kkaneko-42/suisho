@@ -26,11 +26,11 @@ public:
      * @tparam Without Component types tuple excluded the iterating
      * @param system Registered system
      */
-    template <class With, class Without>
-    void addSystem(ISystem<With, Without>& system) {
+    template <class T, class... S>
+    void addSystem(ISystem<T, S...>& system) {
         systems_[static_cast<int>(SchedulePoint::kUpdate)].push_back(
             [&system](World& world, EntityCommandBuffer& cmd) {
-                typename ISystem<With, Without>::Params params{ {}, {world} };
+                typename ISystem<T, S...>::Params params{ {}, {world} };
                 system.update(params);
                 cmd = std::move(params.commands);
             }
