@@ -33,7 +33,7 @@ struct ISystem {
      * 
      * @param params System parameters
      */
-    virtual void update(Params& params) = 0;
+    virtual void update(Params& params) {};
 };
 
 } // namespace suisho
