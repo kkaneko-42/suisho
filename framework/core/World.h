@@ -44,6 +44,7 @@ public:
      */
     template <class T, class... Args>
     T& addComponent(Entity e, Args&&... args) {
+        static_assert(std::is_constructible_v<T, Args...>, "\x1b[41m T must be constructible from Args \x1b[49m");
         if (!reg_.valid(e)) {
             throw std::invalid_argument(__func__ + std::string(": e is invalid"));
         }
@@ -119,7 +120,7 @@ public:
         static_assert(
             std::is_invocable_v<F, Entity, T&, S&...> ||
             std::is_invocable_v<F, T&, S&...>,
-            "F must be callable by arguments (Entity, T&, S&...) or (T&, S&...)"
+            "\x1b[41m F must be callable by arguments (Entity, T&, S&...) or (T&, S&...) \x1b[49m"
         );
         reg_.view<T, S...>().each(std::forward<F>(f));
     }
