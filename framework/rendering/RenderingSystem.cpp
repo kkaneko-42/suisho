@@ -14,7 +14,7 @@ RenderingSystem::~RenderingSystem() {
     renderer_.terminate();
 }
 
-void RenderingSystem::update(Params& params) {
+void RenderingSystem::update(SystemParams& params, Query<const Transform> query) {
     static Material statue = renderer_.createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg");
 
     // FIXME
@@ -26,7 +26,7 @@ void RenderingSystem::update(Params& params) {
 
     if (renderer_.beginFrame()) {
         renderer_.bindMaterial(statue);
-        params.query.forEach([this](const Transform& xform) {
+        query.forEach([this](const Transform& xform) {
             renderer_.draw(xform.toMatrix());
         });
 

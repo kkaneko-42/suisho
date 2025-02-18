@@ -1,18 +1,18 @@
 ﻿#ifndef SUISHO_RENDERING_RENDERING_SYSTEM_H_
 #define SUISHO_RENDERING_RENDERING_SYSTEM_H_
 
-#include "core/ISystem.h"
+#include "core/SystemTraits.h"
 #include "core/Transform.h"
 #include "rendering/Renderer2D.h"
 
 namespace suisho {
 
-class RenderingSystem : public ISystem<const Transform> {
+class RenderingSystem {
 public:
     RenderingSystem();
     ~RenderingSystem();
 
-    void update(Params& params) override;
+    void update(SystemParams& params, Query<const Transform> query);
     void* getWindowHandle() { return renderer_.getWindowHandle(); } // FIXME
 
 private:

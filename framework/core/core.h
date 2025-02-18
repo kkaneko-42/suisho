@@ -6,9 +6,9 @@
 #include "core/World.h"
 #include "core/EntityCommandBuffer.h"
 #include "core/Query.h"
-#include "core/ISystem.h"
 #include "core/SystemScheduler.h"
 #include "core/WorldSerializer.h"
 #include "core/SceneManager.h"
+#include "core/SystemTraits.h"
 
 #endif // SUISHO_CORE_H_

@@ -6,13 +6,13 @@ void SystemScheduler::update(World& world) {
     auto& systems = systems_[static_cast<int>(SchedulePoint::kUpdate)];
 
     // TODO: Execute in parallel
-    std::vector<EntityCommandBuffer> cmds(systems.size());
-    auto cmd_itr = cmds.begin();
+    std::vector<SystemParams> params(systems.size());
+    auto param_itr = params.begin();
     for (auto& system : systems) {
-        system(world, *(cmd_itr++));
+        system(world, *(param_itr++));
     }
 
-    for (auto& cmd : cmds) {
-        cmd.submit(world);
+    for (auto& param : params) {
+        param.commands.submit(world);
     }
 }

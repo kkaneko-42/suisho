@@ -9,7 +9,7 @@ using namespace suisho;
 
 struct IsCenter {};
 
-class ControllSystem : public ISystem<Transform> {
+class ControllSystem {
 public:
 #if USE_GAMEPAD
     ControllSystem() : pad_(0) {}
@@ -17,7 +17,7 @@ public:
     ControllSystem(void* win) : keyboard_(win) {}
 #endif
 
-    void update(Params& params) {
+    void update(SystemParams& params, Query<Transform>& query) {
 #if USE_GAMEPAD
         pad_.poll();
         const Vec2 xlate = pad_.getAxis2D(Gamepad::kLeftStick);
@@ -29,7 +29,7 @@ public:
         );
 #endif
 
-        params.query.forEach([this, &xlate](Transform& xform) {
+        query.forEach([this, &xlate](Transform& xform) {
             xform.position += Vec3(xlate.x, xlate.y, 0.0f) * 1e-2;
             xform.rotation *= Quat::angleAxis(1e-2, Vec3::kBack);
         });
@@ -69,14 +69,18 @@ int main() {
     SystemScheduler scheduler;
 
     RenderingSystem rendering;
-    scheduler.addSystem(rendering);
+    scheduler.add(SchedulePoint::kUpdate, [&rendering](SystemParams& params, Query<const Transform> query) {
+        rendering.update(params, query);
+    });
 
 #if USE_GAMEPAD
     ControllSystem control;
 #else
     ControllSystem control(rendering.getWindowHandle());
 #endif
-    scheduler.addSystem(control);
+    scheduler.add(SchedulePoint::kUpdate, [&control](SystemParams& params, Query<Transform> query) {
+        control.update(params, query);
+    });
 
     while (true) {
         scheduler.update(SceneManager::current());
