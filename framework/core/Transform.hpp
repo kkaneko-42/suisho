@@ -1,10 +1,10 @@
 ﻿#ifndef SUISHO_CORE_TRANSFORM_H_
 #define SUISHO_CORE_TRANSFORM_H_
 
-#include "math/Vec3.h"
-#include "math/Mat4.h"
-#include "math/Quat.h"
-#include "core/macros.h"
+#include "math/Vec3.hpp"
+#include "math/Mat4.hpp"
+#include "math/Quat.hpp"
+#include "core/macros.hpp"
 
 namespace suisho {
 

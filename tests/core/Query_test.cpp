@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "core/Query.h"
+#include "core/Query.hpp"
 
 using namespace suisho;
 

@@ -1,8 +1,8 @@
-#include "math/Mat4.h"
-#include "math/Vec3.h"
-#include "math/Vec4.h"
-#include "math/Quat.h"
-#include "core/exceptions.h"
+#include "math/Mat4.hpp"
+#include "math/Vec3.hpp"
+#include "math/Vec4.hpp"
+#include "math/Quat.hpp"
+#include "core/exceptions.hpp"
 #include <cmath>
 
 using namespace suisho;

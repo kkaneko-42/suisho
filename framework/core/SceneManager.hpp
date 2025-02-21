@@ -1,7 +1,7 @@
 #ifndef SUISHO_CORE_SCENE_MANAGER_H_
 #define SUISHO_CORE_SCENE_MANAGER_H_
 
-#include "core/World.h"
+#include "core/World.hpp"
 
 namespace suisho {
 

@@ -1,8 +1,8 @@
 #ifndef SUISHO_CORE_SYSTEM_TRAITS_H_
 #define SUISHO_CORE_SYSTEM_TRAITS_H_
 
-#include "core/EntityCommandBuffer.h"
-#include "core/Query.h"
+#include "core/EntityCommandBuffer.hpp"
+#include "core/Query.hpp"
 
 namespace suisho {
 

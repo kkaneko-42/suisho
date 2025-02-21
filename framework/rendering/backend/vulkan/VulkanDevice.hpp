@@ -6,11 +6,11 @@
 #include <vector>
 #include <functional>
 #include <variant>
-#include "rendering/backend/vulkan/VulkanImage.h"
-#include "rendering/backend/vulkan/VulkanTexture.h"
-#include "rendering/backend/vulkan/VulkanBuffer.h"
-#include "rendering/backend/vulkan/VulkanBindingLayout.h"
-#include "rendering/VertexFormat.h"
+#include "rendering/backend/vulkan/VulkanImage.hpp"
+#include "rendering/backend/vulkan/VulkanTexture.hpp"
+#include "rendering/backend/vulkan/VulkanBuffer.hpp"
+#include "rendering/backend/vulkan/VulkanBindingLayout.hpp"
+#include "rendering/VertexFormat.hpp"
 
 namespace suisho::backend {
 

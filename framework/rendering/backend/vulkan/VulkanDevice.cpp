@@ -1,5 +1,5 @@
-#include "rendering/backend/vulkan/VulkanDevice.h"
-#include "rendering/backend/vulkan/VulkanCommandBuffer.h"
+#include "rendering/backend/vulkan/VulkanDevice.hpp"
+#include "rendering/backend/vulkan/VulkanCommandBuffer.hpp"
 #include <cstring> // memcpy, strcmp
 #include <string>
 #include <iostream>

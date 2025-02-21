@@ -1,5 +1,5 @@
-﻿#include "rendering/Renderer2D.h"
-#include "math/suisho_math.h"
+﻿#include "rendering/Renderer2D.hpp"
+#include "math/suisho_math.hpp"
 #include <cstdlib>
 #include <cstring> // memcpy, memset
 #include <fstream>

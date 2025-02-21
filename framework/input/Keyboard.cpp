@@ -1,4 +1,4 @@
-#include "input/Keyboard.h"
+#include "input/Keyboard.hpp"
 #include <unordered_map>
 #include <GLFW/glfw3.h>
 

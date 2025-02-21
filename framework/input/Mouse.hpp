@@ -1,7 +1,7 @@
 ﻿#ifndef SUISHO_INPUT_MOUSE_H_
 #define SUISHO_INPUT_MOUSE_H_
 
-#include "input/IInputDevice.h"
+#include "input/IInputDevice.hpp"
 #include <bitset>
 
 namespace suisho {

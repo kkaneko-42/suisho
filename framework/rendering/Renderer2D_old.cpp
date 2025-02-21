@@ -1,4 +1,4 @@
-﻿#include "rendering/Renderer2D.h"
+﻿#include "rendering/Renderer2D.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -21,7 +21,7 @@
 #include <set>
 #include <unordered_map>
 
-#include "math/suisho_math.h"
+#include "math/suisho_math.hpp"
 
 using namespace suisho;
 
@@ -78,7 +78,7 @@ struct QueueFamilyIndices {
     std::optional<uint32_t> presentFamily;
 
     bool isComplete() {
-        return graphicsFamily.has_value() && presentFamily.has_value();
+        return graphicsFamily.hppas_value() && presentFamily.hppas_value();
     }
 };
 

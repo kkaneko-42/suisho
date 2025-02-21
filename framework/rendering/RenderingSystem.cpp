@@ -1,5 +1,5 @@
-﻿#include "rendering/RenderingSystem.h"
-#include "math/Vec3.h"
+﻿#include "rendering/RenderingSystem.hpp"
+#include "math/Vec3.hpp"
 #include <stdexcept>
 
 using namespace suisho;

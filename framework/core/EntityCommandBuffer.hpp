@@ -3,7 +3,7 @@
 
 #include <queue>
 #include <functional>
-#include "core/World.h"
+#include "core/World.hpp"
 
 namespace suisho {
 

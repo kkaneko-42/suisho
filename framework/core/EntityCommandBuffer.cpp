@@ -1,4 +1,4 @@
-#include "core/EntityCommandBuffer.h"
+#include "core/EntityCommandBuffer.hpp"
 
 using namespace suisho;
 

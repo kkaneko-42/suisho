@@ -1,8 +1,8 @@
 #ifndef SUISHO_CORE_MACROS_H_
 #define SUISHO_CORE_MACROS_H_
 
-#include "core/internal/foreach_macro.h"
-#include "core/WorldSerializer.h" // FIXME: Dependency
+#include "core/internal/foreach_macro.hpp"
+#include "core/WorldSerializer.hpp" // FIXME: Dependency
 
 #define SUISHO_SERIALIZE_IMPL(prop)\
     archive(cereal::make_nvp(#prop, data.prop));

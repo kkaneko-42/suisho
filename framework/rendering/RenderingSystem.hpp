@@ -1,9 +1,9 @@
 ﻿#ifndef SUISHO_RENDERING_RENDERING_SYSTEM_H_
 #define SUISHO_RENDERING_RENDERING_SYSTEM_H_
 
-#include "core/SystemTraits.h"
-#include "core/Transform.h"
-#include "rendering/Renderer2D.h"
+#include "core/SystemTraits.hpp"
+#include "core/Transform.hpp"
+#include "rendering/Renderer2D.hpp"
 
 namespace suisho {
 

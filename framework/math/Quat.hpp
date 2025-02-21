@@ -1,7 +1,7 @@
 #ifndef SUISHO_MATH_QUAT_H_
 #define SUISHO_MATH_QUAT_H_
 
-#include "core/macros.h"
+#include "core/macros.hpp"
 
 namespace suisho {
 

@@ -1,7 +1,7 @@
 #ifndef SUISHO_RENDERING_BACKEND_VULKAN_TEXTURE_H_
 #define SUISHO_RENDERING_BACKEND_VULKAN_TEXTURE_H_
 
-#include "rendering/backend/vulkan/VulkanImage.h"
+#include "rendering/backend/vulkan/VulkanImage.hpp"
 
 namespace suisho::backend {
 

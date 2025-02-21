@@ -1,5 +1,5 @@
-#include "core/SceneManager.h"
-#include "core/WorldSerializer.h"
+#include "core/SceneManager.hpp"
+#include "core/WorldSerializer.hpp"
 
 using namespace suisho;
 

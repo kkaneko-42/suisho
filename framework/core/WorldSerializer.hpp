@@ -1,7 +1,7 @@
 #ifndef SUISHO_CORE_WORLD_SERIALIZER_H_
 #define SUISHO_CORE_WORLD_SERIALIZER_H_
 
-#include "core/World.h"
+#include "core/World.hpp"
 #include <cereal/archives/json.hpp>
 #include <functional>
 

@@ -1,4 +1,4 @@
-#include "input/Gamepad.h"
+#include "input/Gamepad.hpp"
 #include <unordered_map>
 #include <GLFW/glfw3.h>
 #include <stdexcept>

@@ -1,7 +1,7 @@
 #ifndef SUISHO_CORE_SYSTEM_SCHEDULER_H_
 #define SUISHO_CORE_SYSTEM_SCHEDULER_H_
 
-#include "core/SystemTraits.h"
+#include "core/SystemTraits.hpp"
 #include <functional>
 #include <vector>
 

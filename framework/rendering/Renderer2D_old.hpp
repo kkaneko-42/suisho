@@ -2,9 +2,9 @@
 #define SUISHO_RENDERING_RENDERER_2D_H_
 
 #include <string>
-#include "rendering/Material.h"
-#include "math/Mat4.h"
-#include "math/Vec2.h"
+#include "rendering/Material.hpp"
+#include "math/Mat4.hpp"
+#include "math/Vec2.hpp"
 
 namespace suisho {
 

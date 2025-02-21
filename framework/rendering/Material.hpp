@@ -1,8 +1,8 @@
 #ifndef SUISHO_RENDERING_MATERIAL_H_
 #define SUISHO_RENDERING_MATERIAL_H_
 
-#include "backend/vulkan/VulkanTexture.h"
-#include "backend/vulkan/VulkanBindingLayout.h"
+#include "backend/vulkan/VulkanTexture.hpp"
+#include "backend/vulkan/VulkanBindingLayout.hpp"
 
 namespace suisho {
 

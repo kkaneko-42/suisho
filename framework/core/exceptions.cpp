@@ -1,4 +1,4 @@
-#include "core/exceptions.h"
+#include "core/exceptions.hpp"
 
 using namespace suisho;
 

@@ -1,6 +1,6 @@
-#include "math/Quat.h"
-#include "math/Vec3.h"
-#include "core/exceptions.h"
+#include "math/Quat.hpp"
+#include "math/Vec3.hpp"
+#include "core/exceptions.hpp"
 #include <utility>
 #include <cmath>
 

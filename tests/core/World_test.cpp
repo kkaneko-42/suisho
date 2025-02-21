@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "core/World.h"
+#include "core/World.hpp"
 
 using namespace suisho;
 

@@ -1,4 +1,4 @@
-#include "core/WorldSerializer.h"
+#include "core/WorldSerializer.hpp"
 #include <fstream>
 #include <cereal/cereal.hpp>
 #include <cereal/archives/json.hpp>

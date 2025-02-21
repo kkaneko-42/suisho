@@ -1,4 +1,4 @@
-#include "input/Mouse.h"
+#include "input/Mouse.hpp"
 #include <unordered_map>
 #include <GLFW/glfw3.h>
 #include <stdexcept>

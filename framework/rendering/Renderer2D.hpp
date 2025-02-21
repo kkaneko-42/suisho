@@ -4,12 +4,12 @@
 #include <string>
 #include <array>
 #include <memory>
-#include "backend/vulkan/VulkanDevice.h"
-#include "backend/vulkan/VulkanCommandBuffer.h"
-#include "backend/vulkan/VulkanImage.h"
-#include "rendering/Material.h"
-#include "math/Mat4.h"
-#include "math/Vec2.h"
+#include "backend/vulkan/VulkanDevice.hpp"
+#include "backend/vulkan/VulkanCommandBuffer.hpp"
+#include "backend/vulkan/VulkanImage.hpp"
+#include "rendering/Material.hpp"
+#include "math/Mat4.hpp"
+#include "math/Vec2.hpp"
 
 namespace suisho {
 
