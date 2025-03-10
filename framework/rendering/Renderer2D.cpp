@@ -240,12 +240,14 @@ void Renderer2D::endFrame() {
     device_.present();
 
     current_frame_ = (current_frame_ + 1) % kMaxFramesOverlapped;
+    bound_material_ = nullptr;
     drawed_count_ = 0;
 }
 
 void Renderer2D::bindMaterial(const Material& material) {
     // Material binding is set = 1
     frames_[current_frame_].cmd_buf.bindBindingSet(1, material.binding_set, pipeline_layout_);
+    bound_material_ = &material;
 }
 
 void Renderer2D::draw(const Mat4& xform) {

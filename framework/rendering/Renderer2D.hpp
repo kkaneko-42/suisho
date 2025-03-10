@@ -34,9 +34,9 @@ public:
     void endFrame();
 
     void bindMaterial(const Material& material);
+    const Material* getBoundMaterial() const { return bound_material_; }
     void draw(const Mat4& xform);
     void drawText(const std::string& s, const Vec2& pos, float rot_degree, const Vec2& scale);
-
 
     // FIXME
     Material createMaterial(const std::string& texture_path);
@@ -79,6 +79,7 @@ private:
 
     std::array<Frame, kMaxFramesOverlapped> frames_;
     size_t current_frame_;
+    const Material* bound_material_;
     uint32_t drawed_count_;
 
     void createDepthBuffer(uint32_t width, uint32_t height);
