@@ -23,7 +23,7 @@ void RenderingSystem::update(SystemParams& params, Query<const Renderable, const
 
     if (renderer_.beginFrame()) {
         query.forEach([this](const Renderable& renderable, const Transform& tf) {
-            if (renderer_.getBoundMaterial() != renderable.material.get()) {
+            if (renderable.material.get() != renderer_.getBoundMaterial()) {
                 renderer_.bindMaterial(*renderable.material);
             }
 
