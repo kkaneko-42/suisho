@@ -14,20 +14,20 @@ RenderingSystem::~RenderingSystem() {
     renderer_.terminate();
 }
 
-void RenderingSystem::update(SystemParams& params, Query<const Transform> query) {
-    static Material statue = renderer_.createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg");
-
+void RenderingSystem::update(SystemParams& params, Query<const Renderable, const Transform> query) {
     // FIXME
     if (renderer_.shouldWindowClose()) {
-        renderer_.destroyMaterial(statue);
         renderer_.terminate();
         exit(0);
     }
 
     if (renderer_.beginFrame()) {
-        renderer_.bindMaterial(statue);
-        query.forEach([this](const Transform& xform) {
-            renderer_.draw(xform.toMatrix());
+        query.forEach([this](const Renderable& renderable, const Transform& tf) {
+            if (renderer_.getBoundMaterial() != renderable.material.get()) {
+                renderer_.bindMaterial(*renderable.material);
+            }
+
+            renderer_.draw(tf.toMatrix());
         });
 
         renderer_.endFrame();

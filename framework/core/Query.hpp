@@ -12,7 +12,11 @@ public:
 
     template <class F>
     void forEach(F&& f) {
-        world_.iter<T, S...>(std::forward<F>(f));
+        if constexpr (std::is_invocable_v<F, Entity, T&, S&...>) {
+            world_.iter<Entity, T, S...>(std::forward<F>(f));
+        } else {
+            world_.iter<T, S...>(std::forward<F>(f));
+        }
     }
 
 private:

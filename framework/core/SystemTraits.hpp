@@ -6,8 +6,11 @@
 
 namespace suisho {
 
+class World;
+
 struct SystemParams {
     EntityCommandBuffer commands;
+    World& world;
 };
 
 template <class F>

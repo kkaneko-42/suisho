@@ -29,9 +29,12 @@ public:
         );
 #endif
 
-        query.forEach([this, &xlate](Transform& xform) {
+        query.forEach([this, &xlate, &params](Entity e, Transform& xform) {
             xform.position += Vec3(xlate.x, xlate.y, 0.0f) * 1e-2;
             xform.rotation *= Quat::angleAxis(1e-2, Vec3::kBack);
+            if (params.world.hasComponent<IsCenter>(e)) {
+                xform.rotation *= Quat::angleAxis(1e-2, Vec3::kBack);
+            }
         });
     }
 
@@ -43,8 +46,8 @@ private:
 #endif
 };
 
-static World createWorld() {
-    std::stringstream ss;
+static World createWorld(RenderingSystem& renderer) {
+    auto material = std::make_shared<Material>(renderer.getRenderer().createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg"));
 
     World world;
     const float scale = 0.2f;
@@ -55,8 +58,12 @@ static World createWorld() {
             auto e = world.createEntity();
             const Vec3 pos = (scale + 0.01f) * Vec3(x, y, 0.0f);
             world.addComponent<Transform>(e, pos, Quat::kIdentity, scale * Vec3::kOne);
+            world.addComponent<Renderable>(e, material);
             if (y == 0 && x == 0) {
                 world.addComponent<IsCenter>(e);
+                world.getComponent<Renderable>(e)->material = std::make_shared<Material>(
+                    renderer.getRenderer().createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png")
+                );
             }
         }
     }
@@ -65,11 +72,11 @@ static World createWorld() {
 }
 
 int main() {
-    SceneManager::activate(createWorld());
-    SystemScheduler scheduler;
-
     RenderingSystem rendering;
-    scheduler.add(SchedulePoint::kUpdate, [&rendering](SystemParams& params, Query<const Transform> query) {
+    SceneManager::activate(createWorld(rendering));
+
+    SystemScheduler scheduler;
+    scheduler.add(SchedulePoint::kUpdate, [&rendering](SystemParams& params, Query<const Renderable, const Transform> query) {
         rendering.update(params, query);
     });
 
