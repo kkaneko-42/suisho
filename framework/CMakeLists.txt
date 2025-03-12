@@ -44,11 +44,13 @@ include(core/CMakeLists.txt)
 include(math/CMakeLists.txt)
 include(rendering/CMakeLists.txt)
 include(input/CMakeLists.txt)
+include(resource/CMakeLists.txt)
 set(SUISHO_FRAMEWORK_SRCS
     ${SUISHO_CORE_SRCS}
     ${SUISHO_MATH_SRCS}
     ${SUISHO_RENDERING_SRCS}
     ${SUISHO_INPUT_SRCS}
+    ${SUISHO_RESOURCE_SRCS}
 )
 
 add_library(suisho_framework STATIC ${SUISHO_FRAMEWORK_SRCS})
