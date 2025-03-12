@@ -4,5 +4,6 @@
 #include "resource/Resource.hpp"
 #include "resource/ResourceManager.hpp"
 #include "resource/IResourceLoader.hpp"
+#include "resource/loaders/TextureLoader.hpp"
 
 #endif
