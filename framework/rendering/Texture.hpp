@@ -2,7 +2,6 @@
 #define SUISHO_RENDERING_TEXTURE_H_
 
 #include "resource/Resource.hpp"
-#include "rendering/backend/vulkan/VulkanTexture.hpp"
 
 namespace suisho {
 
