@@ -1,35 +1,34 @@
 ﻿#include "rendering/RenderingSystem.hpp"
+#include "rendering/Renderer2D.hpp"
 #include "math/Vec3.hpp"
 #include <stdexcept>
 
 using namespace suisho;
 
-RenderingSystem::RenderingSystem() {
-    if (!renderer_.initialize()) {
-        throw std::runtime_error("Renderer2D initialization failed");
-    }
-}
+RenderingSystem::RenderingSystem() {}
+RenderingSystem::~RenderingSystem() {}
 
-RenderingSystem::~RenderingSystem() {
-    renderer_.terminate();
+void* RenderingSystem::getWindowHandle() {
+    return Renderer2D::get().getWindowHandle();
 }
 
 void RenderingSystem::update(SystemParams& params, Query<const Renderable, const Transform> query) {
+    auto& renderer = Renderer2D::get();
     // FIXME
-    if (renderer_.shouldWindowClose()) {
-        renderer_.terminate();
+    if (renderer.shouldWindowClose()) {
+        renderer.terminate();
         exit(0);
     }
 
-    if (renderer_.beginFrame()) {
-        query.forEach([this](const Renderable& renderable, const Transform& tf) {
-            if (renderable.material.get() != renderer_.getBoundMaterial()) {
-                renderer_.bindMaterial(*renderable.material);
+    if (renderer.beginFrame()) {
+        query.forEach([this, &renderer](const Renderable& renderable, const Transform& tf) {
+            if (renderable.material.get() != renderer.getBoundMaterial()) {
+                renderer.bindMaterial(*renderable.material);
             }
 
-            renderer_.draw(tf.toMatrix());
+            renderer.draw(tf.toMatrix());
         });
 
-        renderer_.endFrame();
+        renderer.endFrame();
     }
 }

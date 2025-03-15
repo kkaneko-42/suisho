@@ -26,6 +26,8 @@ static std::vector<char> readBinary(const std::string& filepath) {
     return buffer;
 }
 
+std::unique_ptr<Renderer2D> Renderer2D::instance_ = nullptr;
+
 Renderer2D::Renderer2D() : frames_(), current_frame_(0), drawed_count_(0) {
 
 }

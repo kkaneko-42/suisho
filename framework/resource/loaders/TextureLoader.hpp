@@ -2,6 +2,7 @@
 #define SUISHO_RESOURCE_TEXTURE_LOADER_H_
 
 #include "resource/IResourceLoader.hpp"
+#include "rendering/Texture.hpp"
 
 namespace suisho {
 

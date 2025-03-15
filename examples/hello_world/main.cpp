@@ -46,8 +46,9 @@ private:
 #endif
 };
 
-static World createWorld(RenderingSystem& renderer) {
-    auto material = std::make_shared<Material>(renderer.getRenderer().createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg"));
+static World createWorld() {
+    auto& renderer = Renderer2D::get();
+    auto material = std::make_shared<Material>(renderer.createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg"));
 
     World world;
     const float scale = 0.2f;
@@ -62,7 +63,7 @@ static World createWorld(RenderingSystem& renderer) {
             if (y == 0 && x == 0) {
                 world.addComponent<IsCenter>(e);
                 world.getComponent<Renderable>(e)->material = std::make_shared<Material>(
-                    renderer.getRenderer().createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png")
+                    renderer.createMaterial(SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png")
                 );
             }
         }
@@ -73,7 +74,7 @@ static World createWorld(RenderingSystem& renderer) {
 
 int main() {
     RenderingSystem rendering;
-    SceneManager::activate(createWorld(rendering));
+    SceneManager::activate(createWorld());
 
     SystemScheduler scheduler;
     scheduler.add(SchedulePoint::kUpdate, [&rendering](SystemParams& params, Query<const Renderable, const Transform> query) {

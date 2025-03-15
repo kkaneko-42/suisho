@@ -20,6 +20,15 @@ public:
     static constexpr size_t kMaxFramesOverlapped = 2;
     static constexpr size_t kMaxObjectsCount = 1024;
 
+    static Renderer2D& get() { 
+        if (instance_ == nullptr) {
+            instance_ = std::unique_ptr<Renderer2D>(new Renderer2D());
+            instance_->initialize();
+        }
+
+        return *instance_;
+    }
+
     Renderer2D();
     ~Renderer2D();
 
@@ -37,6 +46,8 @@ public:
     const Material* getBoundMaterial() const { return bound_material_; }
     void draw(const Mat4& xform);
     void drawText(const std::string& s, const Vec2& pos, float rot_degree, const Vec2& scale);
+
+    backend::VulkanDevice& getRenderingDevice() { return device_; }
 
     // FIXME
     Material createMaterial(const std::string& texture_path);
@@ -61,6 +72,8 @@ private:
         VkDescriptorSet global_binding;
         VkDescriptorSet object_binding;
     };
+
+    static std::unique_ptr<Renderer2D> instance_;
 
     backend::VulkanDevice device_;
     size_t dynamic_alignment_;
