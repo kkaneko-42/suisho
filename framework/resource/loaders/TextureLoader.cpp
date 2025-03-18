@@ -1,10 +1,12 @@
 #include "resource/loaders/TextureLoader.hpp"
 #include "rendering/backend/vulkan/VulkanDevice.hpp"
 #include "rendering/backend/vulkan/VulkanTexture.hpp"
-#include "rendering/Renderer2D.hpp"
 #include "resource/loaders/stb_image.h"
 
 using namespace suisho;
+
+TextureLoader::TextureLoader(std::shared_ptr<backend::VulkanDevice> device) : device_(device)
+{}
 
 Resource* TextureLoader::load(const std::string& uri) {
     int width, height, channels;
@@ -13,15 +15,13 @@ Resource* TextureLoader::load(const std::string& uri) {
         throw std::runtime_error("TextureLoader::load(): failed to load " + uri);
     }
 
-    auto& device = Renderer2D::get().getRenderingDevice();
-    backend::VulkanTexture* texture = new backend::VulkanTexture(device.createTexture(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels, VK_FORMAT_R8G8B8A8_SRGB));
+    backend::VulkanTexture* texture = new backend::VulkanTexture(device_->createTexture(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels, VK_FORMAT_R8G8B8A8_SRGB));
     stbi_image_free(pixels);
     return texture;
 }
 
 bool TextureLoader::unload(Resource* res) {
-    auto& device = Renderer2D::get().getRenderingDevice();
-    device.destroyTexture(*static_cast<backend::VulkanTexture*>(res));
+    device_->destroyTexture(*static_cast<backend::VulkanTexture*>(res));
     delete res;
     return true;
 }

@@ -84,7 +84,7 @@ int main() {
 #if USE_GAMEPAD
     ControllSystem control;
 #else
-    ControllSystem control(rendering.getWindowHandle());
+    ControllSystem control(Renderer2D::get().getRenderingDevice()->getWindowHandle());
 #endif
     scheduler.add(SchedulePoint::kUpdate, [&control](SystemParams& params, Query<Transform> query) {
         control.update(params, query);

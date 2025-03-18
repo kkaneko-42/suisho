@@ -38,7 +38,6 @@ public:
     bool initialize();
     void terminate();
     bool shouldWindowClose() const; // FIXME
-    void* getWindowHandle() { return device_.getWindowHandle(); } // FIXME
     bool beginFrame();
     void endFrame();
 
@@ -47,7 +46,7 @@ public:
     void draw(const Mat4& xform);
     void drawText(const std::string& s, const Vec2& pos, float rot_degree, const Vec2& scale);
 
-    backend::VulkanDevice& getRenderingDevice() { return device_; }
+    std::shared_ptr<backend::VulkanDevice> getRenderingDevice() { return device_; }
 
     // FIXME
     Material createMaterial(const std::string& texture_path);
@@ -75,7 +74,7 @@ private:
 
     static std::unique_ptr<Renderer2D> instance_;
 
-    backend::VulkanDevice device_;
+    std::shared_ptr<backend::VulkanDevice> device_;
     size_t dynamic_alignment_;
 
     backend::VulkanBindingLayout global_layout_;

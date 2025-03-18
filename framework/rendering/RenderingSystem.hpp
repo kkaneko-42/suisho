@@ -13,7 +13,6 @@ public:
     ~RenderingSystem();
 
     void update(SystemParams& params, Query<const Renderable, const Transform> query);
-    void* getWindowHandle(); // FIXME
 };
 
 } // namespace suisho

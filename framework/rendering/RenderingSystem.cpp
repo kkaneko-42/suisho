@@ -8,10 +8,6 @@ using namespace suisho;
 RenderingSystem::RenderingSystem() {}
 RenderingSystem::~RenderingSystem() {}
 
-void* RenderingSystem::getWindowHandle() {
-    return Renderer2D::get().getWindowHandle();
-}
-
 void RenderingSystem::update(SystemParams& params, Query<const Renderable, const Transform> query) {
     auto& renderer = Renderer2D::get();
     // FIXME
