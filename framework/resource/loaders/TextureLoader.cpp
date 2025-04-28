@@ -2,6 +2,7 @@
 #include "rendering/backend/vulkan/VulkanDevice.hpp"
 #include "rendering/backend/vulkan/VulkanTexture.hpp"
 #include "resource/loaders/stb_image.h"
+#include <stdexcept>
 
 using namespace suisho;
 

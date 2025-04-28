@@ -1,4 +1,5 @@
 #include "resource/ResourceManager.hpp"
+#include <stdexcept>
 
 using namespace suisho;
 
