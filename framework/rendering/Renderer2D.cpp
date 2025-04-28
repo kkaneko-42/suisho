@@ -37,7 +37,7 @@ Renderer2D::~Renderer2D() {
 }
 
 bool Renderer2D::initialize() {
-    device_ = std::make_shared<backend::VulkanDevice>();
+    device_ = std::shared_ptr<backend::VulkanDevice>(new backend::VulkanDevice(), [](backend::VulkanDevice* dev) { dev->terminate(); delete dev; });
     bool ok = device_->initialize();
     if (!ok) {
         return false;
@@ -58,8 +58,15 @@ bool Renderer2D::initialize() {
         constexpr size_t tex_size = tex_w * tex_h * 4; // RGBA
         unsigned char texels[tex_size];
         std::memset(texels, 0xff, tex_size);
-        default_material_.texture = device_->createTexture(tex_w, tex_h, texels, VK_FORMAT_R8G8B8A8_SRGB);
-        default_material_.binding_set = device_->createBindingSet(material_layout_, {{ 0, default_material_.texture }});
+        default_material_.texture = std::shared_ptr<backend::VulkanTexture>(
+            new backend::VulkanTexture(device_->createTexture(tex_w, tex_h, texels, VK_FORMAT_R8G8B8A8_SRGB)),
+            [dev = getRenderingDevice()](backend::VulkanTexture* tex) {
+                dev->destroyTexture(*tex);
+                std::cerr << "Default material texture destroyed" << std::endl;
+                delete tex;
+            }
+        );
+        default_material_.binding_set = device_->createBindingSet(material_layout_, {{ 0, *default_material_.texture }});
     }
 
     render_pass_ = device_->createRenderPass();
@@ -167,7 +174,7 @@ void Renderer2D::terminate() {
     device_->destroyPipeline(pipeline_, pipeline_layout_);
     device_->destroyRenderPass(render_pass_);
 
-    device_->terminate();
+    // device_->terminate();
 }
 
 bool Renderer2D::shouldWindowClose() const {
@@ -273,8 +280,15 @@ Material Renderer2D::createMaterial(const std::string& texture_path) {
     }
 
     Material material{};
-    material.texture = device_->createTexture(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels, VK_FORMAT_R8G8B8A8_SRGB);
-    material.binding_set = device_->createBindingSet(material_layout_, { { 0, material.texture } });
+    material.texture = std::shared_ptr<backend::VulkanTexture>(
+        new backend::VulkanTexture(device_->createTexture(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels, VK_FORMAT_R8G8B8A8_SRGB)),
+        [dev = getRenderingDevice()](backend::VulkanTexture* tex) {
+            dev->destroyTexture(*tex);
+            std::cerr << tex->getUri() << " is destroyed" << std::endl;
+            delete tex;
+        }
+    );
+    material.binding_set = device_->createBindingSet(material_layout_, { { 0, *material.texture } });
 
     stbi_image_free(pixels);
     return material;
@@ -282,6 +296,7 @@ Material Renderer2D::createMaterial(const std::string& texture_path) {
 
 void Renderer2D::destroyMaterial(Material& mat) {
     device_->waitIdle(); // FIXME
-    device_->destroyTexture(mat.texture);
+    // device_->destroyTexture(mat.texture);
+    mat.texture = nullptr;
     device_->destroyBindingSet(mat.binding_set);
 }
