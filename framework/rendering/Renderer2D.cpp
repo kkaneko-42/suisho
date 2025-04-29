@@ -62,7 +62,6 @@ bool Renderer2D::initialize() {
             new backend::VulkanTexture(device_->createTexture(tex_w, tex_h, texels, VK_FORMAT_R8G8B8A8_SRGB)),
             [dev = getRenderingDevice()](backend::VulkanTexture* tex) {
                 dev->destroyTexture(*tex);
-                std::cerr << "Default material texture destroyed" << std::endl;
                 delete tex;
             }
         );
@@ -284,7 +283,6 @@ Material Renderer2D::createMaterial(const std::string& texture_path) {
         new backend::VulkanTexture(device_->createTexture(static_cast<uint32_t>(width), static_cast<uint32_t>(height), pixels, VK_FORMAT_R8G8B8A8_SRGB)),
         [dev = getRenderingDevice()](backend::VulkanTexture* tex) {
             dev->destroyTexture(*tex);
-            std::cerr << tex->getUri() << " is destroyed" << std::endl;
             delete tex;
         }
     );
