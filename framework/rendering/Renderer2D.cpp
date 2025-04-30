@@ -65,7 +65,10 @@ bool Renderer2D::initialize() {
                 delete tex;
             }
         );
-        default_material_.binding_set = device_->createBindingSet(material_layout_, {{ 0, *default_material_.texture }});
+
+        for (auto& binding_set : default_material_.binding_set) {
+            binding_set = device_->createBindingSet(material_layout_, {{ 0, *default_material_.texture }});
+        }
     }
 
     render_pass_ = device_->createRenderPass();
@@ -232,7 +235,7 @@ bool Renderer2D::beginFrame() {
     cmd.bindBindingSet(0, frames_[current_frame_].global_binding, pipeline_layout_); // Global binding is set = 0
 
     // Bind default material(set = 1)
-    cmd.bindBindingSet(1, default_material_.binding_set, pipeline_layout_);
+    cmd.bindBindingSet(1, default_material_.binding_set[current_frame_], pipeline_layout_);
     return true;
 }
 
@@ -255,7 +258,7 @@ void Renderer2D::endFrame() {
 
 void Renderer2D::bindMaterial(const Material& material) {
     // Material binding is set = 1
-    frames_[current_frame_].cmd_buf.bindBindingSet(1, material.binding_set, pipeline_layout_);
+    frames_[current_frame_].cmd_buf.bindBindingSet(1, material.binding_set[current_frame_], pipeline_layout_);
     bound_material_ = &material;
 }
 
@@ -286,7 +289,10 @@ Material Renderer2D::createMaterial(const std::string& texture_path) {
             delete tex;
         }
     );
-    material.binding_set = device_->createBindingSet(material_layout_, { { 0, *material.texture } });
+
+    for (auto& binding_set : material.binding_set) {
+        binding_set = device_->createBindingSet(material_layout_, { { 0, *material.texture } });
+    }
 
     stbi_image_free(pixels);
     return material;
@@ -296,5 +302,7 @@ void Renderer2D::destroyMaterial(Material& mat) {
     device_->waitIdle(); // FIXME
     // device_->destroyTexture(mat.texture);
     mat.texture = nullptr;
-    device_->destroyBindingSet(mat.binding_set);
+    for (auto& binding_set : mat.binding_set) {
+        device_->destroyBindingSet(binding_set);
+    }
 }
