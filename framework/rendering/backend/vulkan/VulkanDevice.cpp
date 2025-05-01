@@ -478,43 +478,44 @@ VkDescriptorSet VulkanDevice::createBindingSet(
         throw std::runtime_error("Failed to allocate descriptor set");
     }
 
-    VkWriteDescriptorSet write_info{};
-    write_info.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_info.dstSet = set;
-    write_info.dstArrayElement = 0;
-    write_info.descriptorCount = 1;
     for (auto& [binding, resource] : binded) {
-        write_info.dstBinding = binding;
-        if (resource.index() == 0) { // Buffer
-            const auto& buf = std::get<VulkanBuffer>(resource);
-            VkDescriptorBufferInfo buf_info{};
-            buf_info.buffer = buf.buffer;
-            buf_info.offset = 0;
-            buf_info.range = buf.size;
-            write_info.pBufferInfo = &buf_info;
-            write_info.descriptorType = layout.bindings.at(binding);
-
-            vkUpdateDescriptorSets(device, 1, &write_info, 0, nullptr);
-            write_info.pBufferInfo = nullptr;
-        }
-        else if (resource.index() == 1) { // Image
-            const auto& texture = std::get<VulkanTexture>(resource);
-            VkDescriptorImageInfo img_info{};
-            img_info.imageLayout = texture.image.layout;
-            img_info.imageView = texture.image.view;
-            img_info.sampler = texture.sampler;
-            write_info.pImageInfo = &img_info;
-            write_info.descriptorType = layout.bindings.at(binding);
-
-            vkUpdateDescriptorSets(device, 1, &write_info, 0, nullptr);
-            write_info.pImageInfo = nullptr;
-        }
-        else {
-            // Undefined resource type
-        }
+        updateBindingSet(set, binding, resource, layout.bindings.at(binding));
     }
 
     return set;
+}
+
+void VulkanDevice::updateBindingSet(
+    VkDescriptorSet dst,
+    uint32_t dst_index,
+    const std::variant<VulkanBuffer, VulkanTexture>& resource,
+    VkDescriptorType type
+) {
+    VkWriteDescriptorSet info{};
+    info.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    info.dstSet = dst;
+    info.dstArrayElement = 0;
+    info.descriptorCount = 1;
+    info.descriptorType = type;
+    info.dstBinding = dst_index;
+
+    if (auto buf = std::get_if<VulkanBuffer>(&resource)) {
+        VkDescriptorBufferInfo buf_info{};
+        buf_info.buffer = buf->buffer;
+        buf_info.offset = 0;
+        buf_info.range = buf->size;
+        info.pBufferInfo = &buf_info;
+        vkUpdateDescriptorSets(device, 1, &info, 0, nullptr);
+    } else if (auto tex = std::get_if<VulkanTexture>(&resource)) {
+        VkDescriptorImageInfo img_info{};
+        img_info.imageLayout = tex->image.layout;
+        img_info.imageView = tex->image.view;
+        img_info.sampler = tex->sampler;
+        info.pImageInfo = &img_info;
+        vkUpdateDescriptorSets(device, 1, &info, 0, nullptr);
+    } else {
+        throw std::runtime_error("Unknown resource type detected");
+    }
 }
 
 void VulkanDevice::destroyBindingSet(VkDescriptorSet set) {

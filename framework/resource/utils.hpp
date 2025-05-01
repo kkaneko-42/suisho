@@ -7,7 +7,7 @@
 
 namespace suisho {
 
-std::string getExtension(const std::string& path) {
+inline std::string getExtension(const std::string& path) {
     const size_t pos = path.rfind(".");
     if (pos == std::string::npos) {
         return "";

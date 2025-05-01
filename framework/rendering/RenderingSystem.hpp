@@ -12,7 +12,8 @@ public:
     RenderingSystem();
     ~RenderingSystem();
 
-    void update(SystemParams& params, Query<const Renderable, const Transform> query);
+    // FIXME: Renderiable must be const
+    void update(SystemParams& params, Query<Renderable, const Transform> query);
 };
 
 } // namespace suisho

@@ -1,4 +1,5 @@
 ﻿#include "suisho.hpp"
+#include "resource/suisho_resource.hpp"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -12,9 +13,9 @@ struct IsCenter {};
 class ControllSystem {
 public:
 #if USE_GAMEPAD
-    ControllSystem() : pad_(0) {}
+    ControllSystem() : pad_(0), elapsed_frames_(0) {}
 #else
-    ControllSystem(void* win) : keyboard_(win) {}
+    ControllSystem(void* win) : keyboard_(win), elapsed_frames_(0) {}
 #endif
 
     void update(SystemParams& params, Query<Transform>& query) {
@@ -34,8 +35,18 @@ public:
             xform.rotation *= Quat::angleAxis(1e-2, Vec3::kBack);
             if (params.world.hasComponent<IsCenter>(e)) {
                 xform.rotation *= Quat::angleAxis(1e-2, Vec3::kBack);
+
+                if (elapsed_frames_ % 120 == 0) {
+                    static std::shared_ptr<backend::VulkanTexture> tex_a = std::dynamic_pointer_cast<backend::VulkanTexture>(ResourceManager::load(SUISHO_BUILTIN_ASSETS_DIR"/textures/statue.jpg"));
+                    static std::shared_ptr<backend::VulkanTexture> tex_b = std::dynamic_pointer_cast<backend::VulkanTexture>(ResourceManager::load(SUISHO_BUILTIN_ASSETS_DIR"/textures/mandrill.png"));
+
+                    auto& mat = params.world.getComponent<Renderable>(e)->material;
+                    mat->setTexture((mat->texture == tex_a) ? tex_b : tex_a);
+                }
             }
         });
+
+        ++elapsed_frames_;
     }
 
 private:
@@ -44,6 +55,7 @@ private:
 #else
     Keyboard keyboard_;
 #endif
+    size_t elapsed_frames_;
 };
 
 static World createWorld() {
@@ -73,11 +85,12 @@ static World createWorld() {
 }
 
 int main() {
+    ResourceManager::addLoader(std::make_shared<TextureLoader>(Renderer2D::get().getRenderingDevice()));
     RenderingSystem rendering;
     SceneManager::activate(createWorld());
 
     SystemScheduler scheduler;
-    scheduler.add(SchedulePoint::kUpdate, [&rendering](SystemParams& params, Query<const Renderable, const Transform> query) {
+    scheduler.add(SchedulePoint::kUpdate, [&rendering](SystemParams& params, Query<Renderable, const Transform> query) {
         rendering.update(params, query);
     });
 

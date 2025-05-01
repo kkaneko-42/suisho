@@ -37,10 +37,11 @@ public:
 
     bool initialize();
     void terminate();
-    bool shouldWindowClose() const; // FIXME
+    bool shouldWindowClose() const; // FIXME: Renderer2Dの責務？
     bool beginFrame();
     void endFrame();
 
+    size_t getCurrentFrameIndex() const { return current_frame_; } // CONCERN: 用途が限定的すぎ？
     void bindMaterial(const Material& material);
     const Material* getBoundMaterial() const { return bound_material_; }
     void draw(const Mat4& xform);
@@ -48,7 +49,7 @@ public:
 
     std::shared_ptr<backend::VulkanDevice> getRenderingDevice() { return device_; }
 
-    // FIXME
+    // FIXME: Renderer2Dの責務？
     Material createMaterial(const std::string& texture_path);
     void destroyMaterial(Material& mat);
 

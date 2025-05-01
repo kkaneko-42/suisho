@@ -78,6 +78,12 @@ public:
         const VulkanBindingLayout& layout,
         const std::unordered_map<uint32_t, std::variant<VulkanBuffer, VulkanTexture>>& binded
     );
+    void updateBindingSet(
+        VkDescriptorSet dst,
+        uint32_t dst_index,
+        const std::variant<VulkanBuffer, VulkanTexture>& resource,
+        VkDescriptorType type
+    );
     void destroyBindingSet(VkDescriptorSet set);
 
     // CONCERN: Assert attachment size is equal to framebuffer size
